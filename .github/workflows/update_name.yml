@@ -24,7 +24,7 @@ jobs:
   update_name:
     name: 🖋️ Update package name
     runs-on: ubuntu-latest
-    if: github.repository != 'libhal/libhal-__device__'
+    if: github.repository != 'libhal/libhal-mpl311'
     steps:
       - uses: actions/checkout@v2
         with:
@@ -37,13 +37,13 @@ jobs:
         run: echo ${{ github.event.repository.name }} | sed -En "s/libhal-(.*)/device_name=\1/p" >> $GITHUB_ENV
 
       - name: Replace placeholder's in files
-        run: find . -type f -not -path '*/\.git/*' -exec sed -i "s/__device__/${{ env.device_name }}/g" {} +
+        run: find . -type f -not -path '*/\.git/*' -exec sed -i "s/mpl311/${{ env.device_name }}/g" {} +
 
       - name: Replace placeholder's in directory names
-        run: find . -type d -not -path '*/\.git/*' | xargs -r rename "s/__device__/${{ env.device_name }}/g"
+        run: find . -type d -not -path '*/\.git/*' | xargs -r rename "s/mpl311/${{ env.device_name }}/g"
 
       - name: Replace placeholder's in file names
-        run: find . -type f -not -path '*/\.git/*' | xargs -r rename "s/__device__/${{ env.device_name }}/g"
+        run: find . -type f -not -path '*/\.git/*' | xargs -r rename "s/mpl311/${{ env.device_name }}/g"
 
       - name: Remove update_name.yml file
         run: rm .github/workflows/update_name.yml
