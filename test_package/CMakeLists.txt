@@ -15,9 +15,9 @@
 cmake_minimum_required(VERSION 3.15)
 project(test_package LANGUAGES CXX)
 
-find_package(libhal-__device__ REQUIRED CONFIG)
+find_package(libhal-mpl311 REQUIRED CONFIG)
 
 add_executable(${PROJECT_NAME} main.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC .)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
-target_link_libraries(${PROJECT_NAME} PRIVATE libhal::__device__)
+target_link_libraries(${PROJECT_NAME} PRIVATE libhal::mpl311)

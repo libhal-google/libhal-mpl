@@ -14,17 +14,17 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-project(libhal-__device__ VERSION 0.0.1 LANGUAGES CXX)
+project(libhal-mpl311 VERSION 0.0.1 LANGUAGES CXX)
 
 find_package(libhal REQUIRED CONFIG)
 find_package(libhal-util REQUIRED CONFIG)
 
-add_library(libhal-__device__ src/__device__.cpp)
+add_library(libhal-mpl311 src/mpl311.cpp)
 
-target_include_directories(libhal-__device__ PUBLIC include)
-target_compile_features(libhal-__device__ PRIVATE cxx_std_20)
-target_compile_options(libhal-__device__ PRIVATE -Wall -Wextra)
-target_link_libraries(libhal-__device__ PRIVATE
+target_include_directories(libhal-mpl311 PUBLIC include)
+target_compile_features(libhal-mpl311 PRIVATE cxx_std_20)
+target_compile_options(libhal-mpl311 PRIVATE -Wall -Wextra)
+target_link_libraries(libhal-mpl311 PRIVATE
   libhal::libhal
   libhal::util
 )
@@ -33,4 +33,4 @@ if(NOT BUILD_TESTING STREQUAL OFF)
   add_subdirectory(tests)
 endif()
 
-install(TARGETS libhal-__device__)
+install(TARGETS libhal-mpl311)

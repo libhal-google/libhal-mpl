@@ -19,11 +19,11 @@
 #include <cstdlib>
 #include <exception>
 
-#include <libhal-__device__/__device__.hpp>
+#include <libhal-mpl311/mpl311.hpp>
 
 int main()
 {
-  hal::__device__::__device___replace_me bar;
+  hal::mpl311::mpl311 bar;
 }
 
 namespace boost {
