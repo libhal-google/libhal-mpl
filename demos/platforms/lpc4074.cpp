@@ -44,11 +44,13 @@ hal::result<hardware_map> initialize_platform()
   static std::array<hal::byte, 64> uart0_buffer{};
 
   // Get and initialize UART0 for UART based logging
-  static auto uart0 = HAL_CHECK((hal::lpc40::uart::get(0,
-                                                       uart0_buffer,
-                                                       hal::serial::settings{
-                                                         .baud_rate = 38400.0f,
-                                                       })));
+  static auto uart0 = HAL_CHECK((hal::lpc40::uart::get(
+                                  0,
+                                  uart0_buffer,
+                                  hal::serial::settings{
+                                    .baud_rate = 115200.0f,
+                                  })
+                                ));
 
   // Get and initialize I2C
   static auto i2c2 = HAL_CHECK((hal::lpc40::i2c::get(2, 

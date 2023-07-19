@@ -50,22 +50,6 @@ public:
     // Bits 0-3 of 12-bit real-time Temperature sample register
     static constexpr hal::byte OUT_T_LSB_R = 0x05;
 
-    // Data ready status information register 
-    // TODO: redundant?
-    static constexpr hal::byte DR_STATUS_R = 0x06;
-
-    // Bits 12-19 of 20-bit Pressure change data register
-    static constexpr hal::byte OUT_P_DELTA_MSB_R = 0x07;
-    // Bits 4-11 of 20-bit Pressure change data register
-    static constexpr hal::byte OUT_P_DELTA_CSB_R = 0x08;
-    // Bits 0-3 of 20-bit Pressure change data register
-    static constexpr hal::byte OUT_P_DELTA_LSB_R = 0x09;
-
-    // Bits 4-11 of 12-bit Temperature change data register
-    static constexpr hal::byte OUT_T_DELTA_MSB_R = 0x0A;
-    // Bits 0-3 of 12-bit Temperature change data register
-    static constexpr hal::byte OUT_T_DELTA_LSB_R = 0x0B;
-
     // Device identification register. Reset value is 0xC4
     static constexpr hal::byte WHOAMI_R = 0x0C;
 
@@ -114,13 +98,6 @@ public:
     static constexpr hal::byte CTRL_REG1_ALT = 0x80;
 
 /** ---------- MPL311 Oversample Values ---------- **/
-    static constexpr hal::byte CTRL_REG1_OS1 = 0x00;
-    static constexpr hal::byte CTRL_REG1_OS2 = 0x08;
-    static constexpr hal::byte CTRL_REG1_OS4 = 0x10;
-    static constexpr hal::byte CTRL_REG1_OS8 = 0x18;
-    static constexpr hal::byte CTRL_REG1_OS16 = 0x20;
-    static constexpr hal::byte CTRL_REG1_OS32 = 0x28;
-    static constexpr hal::byte CTRL_REG1_OS64 = 0x30;
     static constexpr hal::byte CTRL_REG1_OS128 = 0x38;
 
 /** ---------- Typedefs ---------- **/
@@ -136,7 +113,7 @@ public:
 
     struct pressure_read_t
     {
-        float pressure;
+        float pressure; // kilopascals (KPa)
     };
 
     struct altitude_read_t
@@ -168,7 +145,7 @@ public:
         return a_read();
     }
 
-    hal::status set_sea_pressure(float sea_level_pressure);
+    hal::status set_sea_pressure(uint16_t sea_level_pressure);
     
     hal::status set_altitude_offset(int8_t offset);
 
@@ -196,7 +173,7 @@ private:
     // Trigger a one-shot sample collection for the currently set mode.
     hal::status initiate_one_shot();
 
-    // Check the STATUS_PTDR flag bit in the STATUS_R register
+    // Check if the flag bit(s) are set in the STATUS_R register
     hal::result<bool> check_data_ready_flag(hal::byte flag);
 
     // Read and convert temperature values. Unit: celcius

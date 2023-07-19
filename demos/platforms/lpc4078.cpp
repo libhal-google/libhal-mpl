@@ -48,7 +48,7 @@ hal::result<hardware_map> initialize_platform()
   static auto uart0 = HAL_CHECK(hal::lpc40::uart::get(0,
                                                       uart0_buffer,
                                                       hal::serial::settings{
-                                                        .baud_rate = 38400.0f,
+                                                        .baud_rate = 115200.0f,
                                                       }));
 
   // Get and initialize I2C
