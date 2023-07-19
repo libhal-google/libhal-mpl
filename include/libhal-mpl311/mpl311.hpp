@@ -17,11 +17,14 @@
 #include <span>
 #include <array>
 
+#include <libhal/error.hpp>
 #include <libhal/units.hpp>
 #include <libhal-util/as_bytes.hpp>
 #include <libhal-util/i2c.hpp>
 #include <libhal/i2c.hpp>
 #include <libhal/timeout.hpp>
+#include <libhal-util/serial.hpp>
+#include <libhal-util/steady_clock.hpp>
 
 
 namespace hal::mpl311 {
@@ -131,7 +134,7 @@ public:
         celsius temperature;
     };
 
-    struct presssure_read_t
+    struct pressure_read_t
     {
         float pressure;
     };
@@ -147,24 +150,27 @@ public:
         return mpl311(i2c, clk);
     }
 
-    [[nodiscard]] result<temperature_read_t> read_temperature()
+    // Reset & Configure device
+    hal::status begin();
+
+    [[nodiscard]] hal::result<temperature_read_t> read_temperature()
     {
         return t_read();
     }
 
-    [[nodiscard]] result<pressure_read_t> read_pressure()
+    [[nodiscard]] hal::result<pressure_read_t> read_pressure()
     {
         return p_read();
     }
 
-    [[nodiscard]] result<altitude_read_t> read_altitude()
+    [[nodiscard]] hal::result<altitude_read_t> read_altitude()
     {
         return a_read();
     }
 
-    void set_sea_pressure(float sea_level_pressure);
+    hal::status set_sea_pressure(float sea_level_pressure);
     
-    void set_altitude_offset(int8_t offset);
+    hal::status set_altitude_offset(int8_t offset);
 
 private:
     /// The I2C peripheral used for communication with the device.
@@ -172,27 +178,26 @@ private:
 
     hal::steady_clock* m_clk;
 
+    // Variable to track current sensor mode to determine if CTRL_REG1 ALT flag needs to be set.
     mpl311_mode_t sensor_mode;
 
     /// @param i2c The I2C peripheral used for communication with the device.
-    explicit constexpr mpl311(hal::i2c& p_i2c, hal::steady_clock& p_clk):m_i2c(&p_i2c), m_clk(&p_clk) {
-         if (!begin()) {
-            Serial.println("Could not find sensor. Check wiring.");
-            while(1);
-        }
-    }
-
-    // Reset & Configure device
-    bool begin();
+    explicit constexpr mpl311(hal::i2c& p_i2c, hal::steady_clock& p_clk):
+        m_i2c(&p_i2c), 
+        m_clk(&p_clk) 
+    {}
 
     // Set bit 7 (ALT - mode control) to the binary value of mode
-    void set_mode(mpl311_mode_t mode = BAROMETER_M);
+    hal::status set_mode(mpl311_mode_t mode = BAROMETER_M);
+
+    // Set specified bits in a register while maintaining its current state
+    hal::status modify_reg_bits(hal::byte reg_addr, hal::byte bits_to_set);
 
     // Trigger a one-shot sample collection for the currently set mode.
-    void initiate_one_shot();
+    hal::status initiate_one_shot();
 
     // Check the STATUS_PTDR flag bit in the STATUS_R register
-    bool check_data_ready_flag();
+    hal::result<bool> check_data_ready_flag(hal::byte flag);
 
     // Read and convert temperature values. Unit: celcius
     hal::result<temperature_read_t> t_read(); 

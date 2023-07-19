@@ -23,7 +23,7 @@
 
 int main()
 {
-  hal::mpl311::mpl311 bar;
+  //hal::mpl311 bar;
 }
 
 namespace boost {

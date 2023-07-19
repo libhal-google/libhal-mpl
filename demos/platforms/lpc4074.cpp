@@ -47,11 +47,17 @@ hal::result<hardware_map> initialize_platform()
   static auto uart0 = HAL_CHECK((hal::lpc40::uart::get(0,
                                                        uart0_buffer,
                                                        hal::serial::settings{
-                                                         .baud_rate = 115200,
+                                                         .baud_rate = 38400.0f,
                                                        })));
+
+  // Get and initialize I2C
+  static auto i2c2 = HAL_CHECK((hal::lpc40::i2c::get(2, 
+    hal::i2c::settings{ .clock_rate = 100.0_kHz, }
+  )));
 
   return hardware_map{
     .console = &uart0,
+    .i2c = &i2c2,
     .clock = &counter,
     .reset = []() { hal::cortex_m::reset(); },
   };

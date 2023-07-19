@@ -17,10 +17,12 @@
 #include <libhal/functional.hpp>
 #include <libhal/serial.hpp>
 #include <libhal/steady_clock.hpp>
+#include <libhal-lpc40/i2c.hpp>
 
 struct hardware_map
 {
   hal::serial* console;
+  hal::i2c* i2c;
   hal::steady_clock* clock;
   hal::callback<void()> reset;
 };

@@ -27,23 +27,28 @@ hal::status application(hardware_map& p_map)
   auto& console = *p_map.console;
   auto& i2c = *p_map.i2c;
 
-  hal::print(console, "Demo Application Starting...\n\n");
-  auto mpl311 = HAL_CHECK(hal::tmp::tmp102::mpl311(i2c, clock));
+  hal::print(console, "MPL3115A2 Demo Application Starting...\n\n");
+  auto mpl_311 = HAL_CHECK(hal::mpl311::mpl311::create(i2c, clock));
+
+  if (!mpl_311.begin()) {
+    hal::print(console, "Begin Failed../");
+    return hal::new_error();
+  }
 
   while (true) {
     hal::delay(clock, 500ms);
 
-    hal::print(console, "Reading temperature... \n");
-    auto temperature = HAL_CHECK(mpl311.read_temperature()).temperature;
-    hal::print<32>(console, "measured temperature = %f °C\n", temperature);
+    auto temperature = HAL_CHECK(mpl_311.read_temperature()).temperature;
+    hal::print<32>(console, "Measured temperature = %f", temperature);
+    hal::print(console, " °C\n");
 
-    hal::print(console, "Reading pressure... \n");
-    auto pressure = HAL_CHECK(mpl311.read_pressure()).pressure;
-    hal::print<32>(console, "measured pressure = %f Pa\n", pressure);
+    auto pressure = HAL_CHECK(mpl_311.read_pressure()).pressure;
+    hal::print<32, float>(console, "Measured pressure = %f", pressure);
+    hal::print(console, " KPa\n");
 
-    hal::print(console, "Reading altitude... \n");
-    auto altitude = HAL_CHECK(mpl311.read_altitude()).altitude;
-    hal::print<32>(console, "measured altitude = %f m\n", altitude);
+    auto altitude = HAL_CHECK(mpl_311.read_altitude()).altitude;
+    hal::print<32>(console, "Measured altitude = %f", altitude);
+    hal::print(console, " m\n\n");
   }
 
   return hal::success();
