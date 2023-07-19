@@ -98,6 +98,8 @@ public:
     static constexpr hal::byte CTRL_REG1_ALT = 0x80;
 
 /** ---------- MPL311 Oversample Values ---------- **/
+    static constexpr hal::byte CTRL_REG1_OS32 = 0x28;
+    static constexpr hal::byte CTRL_REG1_OS64 = 0x30;
     static constexpr hal::byte CTRL_REG1_OS128 = 0x38;
 
 /** ---------- Typedefs ---------- **/
@@ -145,7 +147,7 @@ public:
         return a_read();
     }
 
-    hal::status set_sea_pressure(uint16_t sea_level_pressure);
+    hal::status set_sea_pressure(float sea_level_pressure);
     
     hal::status set_altitude_offset(int8_t offset);
 

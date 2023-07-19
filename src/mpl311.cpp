@@ -150,7 +150,7 @@ hal::result<mpl311::temperature_read_t> mpl311::t_read()
     std::array<hal::byte, 2> temp_buffer {};
     HAL_CHECK(hal::write_then_read(*m_i2c, device_address, temp_payload, temp_buffer, hal::never_timeout()));
     // TODO: Figure out this bug in i2c driver
-    hal::delay(*m_clk, 1ms);
+    // hal::delay(*m_clk, 1ms);
 
     int16_t temp_reading = int16_t(temp_buffer[0]) << 8 | int16_t(temp_buffer[1]);
     return mpl311::temperature_read_t {
@@ -171,13 +171,13 @@ hal::result<mpl311::pressure_read_t> mpl311::p_read()
         hal::delay(*m_clk, 5ms);
 
     // Note: 64 -> Pa, 6400 -> kPa
-    constexpr float pressure_conversion_factor = 6400.0f;
+    constexpr float pressure_conversion_factor = 64.0f;
 
     // Read data from OUT_P_MSB_R, OUT_P_CSB_R, and OUT_P_LSB_R
     std::array<hal::byte, 1> pres_payload = { OUT_P_MSB_R };
     std::array<hal::byte, 3> pres_buffer {};
     HAL_CHECK(hal::write_then_read(*m_i2c, device_address, pres_payload, pres_buffer, hal::never_timeout()));
-    hal::delay(*m_clk, 1ms);
+
     uint32_t pressure_reading = uint32_t(pres_buffer[0]) << 16 
                               | uint32_t(pres_buffer[1]) << 8 
                               | uint32_t(pres_buffer[2]);
@@ -205,11 +205,10 @@ hal::result<mpl311::altitude_read_t> mpl311::a_read()
     std::array<hal::byte, 1> alt_payload = { OUT_P_MSB_R };
     std::array<hal::byte, 3> alt_buffer {};
     HAL_CHECK(hal::write_then_read(*m_i2c, device_address, alt_payload, alt_buffer, hal::never_timeout()));
-    hal::delay(*m_clk, 1ms);
 
-    int32_t alt_reading = uint32_t(alt_buffer[0]) << 24 
-                        | uint32_t(alt_buffer[1]) << 16 
-                        | uint32_t(alt_buffer[2]) << 8;
+    int32_t alt_reading = int32_t(alt_buffer[0]) << 24 
+                        | int32_t(alt_buffer[1]) << 16 
+                        | int32_t(alt_buffer[2]) << 8;
 
     return mpl311::altitude_read_t {
         static_cast<float>(alt_reading) / altitude_conversion_factor,
@@ -221,10 +220,10 @@ hal::result<mpl311::altitude_read_t> mpl311::a_read()
     in BAR_IN_MSB_R and BAR_IN_LSB_R registers
 * @param sea_level_pressure: Sea level pressure in Pascals. Default is 101,326 Pa.
 */
-hal::status mpl311::set_sea_pressure(uint16_t sea_level_pressure)
+hal::status mpl311::set_sea_pressure(float sea_level_pressure)
 {
     // divide by 2 to convert to 2 Pa per LSB
-    uint16_t bar = sea_level_pressure / 2;
+    uint16_t bar = (sea_level_pressure / 2);
 
     // write result to register
     std::array<hal::byte, 3> slp_payload = { 

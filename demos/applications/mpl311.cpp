@@ -35,6 +35,12 @@ hal::status application(hardware_map& p_map)
     return hal::new_error();
   }
 
+  // int8_t alt_offset = 23;
+  // mpl_311.set_altitude_offset(alt_offset);
+
+  // float slp = 101325;
+  // mpl_311.set_sea_pressure(slp);
+
   while (true) {
     hal::delay(clock, 500ms);
 
@@ -44,7 +50,7 @@ hal::status application(hardware_map& p_map)
 
     auto pressure = HAL_CHECK(mpl_311.read_pressure()).pressure;
     hal::print<32, float>(console, "Measured pressure = %f", pressure);
-    hal::print(console, " KPa\n");
+    hal::print(console, " Pa\n");
 
     auto altitude = HAL_CHECK(mpl_311.read_altitude()).altitude;
     hal::print<32>(console, "Measured altitude = %f", altitude);
