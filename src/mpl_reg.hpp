@@ -14,7 +14,7 @@
 
 #include <libhal/units.hpp>
 
-namespace hal::mpl311 {
+namespace hal::mpl {
 
 /** ---------- MPL3115A2 Registers ---------- **/
     // The address of the sensor status register - Alias for DR_STATUS or F_STATUS
@@ -71,7 +71,7 @@ namespace hal::mpl311 {
     // Data ready event mode.
     static constexpr hal::byte PT_DATA_CFG_DREM = 0x04;
 
-/** ---------- MPL311 Control Register Bits ---------- **/
+/** ---------- MPL3115A2 Control Register Bits ---------- **/
     // Reset bit
     static constexpr hal::byte CTRL_REG1_RST = 0x04;
     // One-Shot trigger bit
@@ -79,7 +79,7 @@ namespace hal::mpl311 {
     // Altimeter-Barometer mode bit
     static constexpr hal::byte CTRL_REG1_ALT = 0x80;
 
-/** ---------- MPL311 Oversample Values ---------- **/
+/** ---------- mpl Oversample Values ---------- **/
     static constexpr hal::byte CTRL_REG1_OS32 = 0x28;
     static constexpr hal::byte CTRL_REG1_OS64 = 0x30;
     static constexpr hal::byte CTRL_REG1_OS128 = 0x38;

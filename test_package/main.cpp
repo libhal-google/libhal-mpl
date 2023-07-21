@@ -19,11 +19,11 @@
 #include <cstdlib>
 #include <exception>
 
-#include <libhal-mpl311/mpl311.hpp>
+#include <libhal-mpl/mpl.hpp>
 
 int main()
 {
-  //hal::mpl311 bar;
+  //hal::mpl bar;
 }
 
 namespace boost {

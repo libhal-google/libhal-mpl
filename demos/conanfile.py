@@ -28,7 +28,7 @@ class demos(ConanFile):
     def requirements(self):
         if str(self.options.platform).startswith("lpc40"):
             self.requires("libhal-lpc40/[^2.0.0]")
-        self.requires("libhal-mpl311/1.0.0")
+        self.requires("libhal-mpl/1.0.0")
         self.requires("libhal-util/[^2.0.0]")
 
     def layout(self):

@@ -23,14 +23,14 @@ import os
 required_conan_version = ">=1.50.0"
 
 
-class libhal_mpl311_conan(ConanFile):
-    name = "libhal-mpl311"
-    version = "1.0.0"
+class libhal_mpl_conan(ConanFile):
+    name = "libhal-mpl"
+    version = "1.0.1"
     license = "Apache-2.0"
     url = "https://github.com/conan-io/conan-center-index"
-    homepage = "https://github.com/libhal/libhal-mpl311"
-    description = ("A collection of drivers for the mpl311")
-    topics = ("mpl311", "libhal", "driver")
+    homepage = "https://github.com/libhal/libhal-mpl"
+    description = ("A collection of drivers for the mpl3115A2X devices")
+    topics = ("mpl", "libhal", "driver")
     settings = "compiler", "build_type", "os", "arch"
     exports_sources = ("include/*", "tests/*", "LICENSE", "CMakeLists.txt",
                        "src/*")
@@ -105,5 +105,5 @@ class libhal_mpl311_conan(ConanFile):
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.libs = ["libhal-mpl311"]
-        self.cpp_info.set_property("cmake_target_name", "libhal::mpl311")
+        self.cpp_info.libs = ["libhal-mpl"]
+        self.cpp_info.set_property("cmake_target_name", "libhal::mpl")

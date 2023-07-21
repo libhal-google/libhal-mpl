@@ -1,33 +1,33 @@
-#include "libhal-mpl311/mpl311.hpp"
+#include "libhal-mpl/mpl.hpp"
 
 #include "mpl_reg.hpp"
 
 using namespace std::literals;
-namespace hal::mpl311 {
+namespace hal::mpl {
 
-mpl311::mpl311(hal::i2c& p_i2c)
+mpl::mpl(hal::i2c& p_i2c)
     : m_i2c(&p_i2c)
 {}
 
-result<mpl311> mpl311::create(hal::i2c& i2c)
+result<mpl> mpl::create(hal::i2c& i2c)
 {
-    mpl311 mpl_311(i2c);
-    if (!mpl_311.driver_configure()) {
+    mpl mpl_dev(i2c);
+    if (!mpl_dev.driver_configure()) {
         return hal::new_error();
     }
 
-    return mpl_311;
+    return mpl_dev;
 }
 
 /*
-* @brief Startup configuration of MPL311X device.
+* @brief Startup configuration of MPLX device.
     - Perform WHOAMI check
     - Trigger reset and wait for completion
     - Set altimeter mode
     - Set oversampling ratio to 2^128 (OS128)
     - Enable data ready events for pressure/altitude and temperature
 */
-hal::status mpl311::driver_configure()
+hal::status mpl::driver_configure()
 {
     // sanity check
     std::array<hal::byte, 1> whoami_payload { WHOAMI_R };
@@ -63,7 +63,7 @@ hal::status mpl311::driver_configure()
 * @brief Set the CTRL_REG1_ALT bit in CTRL_REG1 to the value corresponding to 'mode'
 * @param mode: The desired operation mode
 */
-hal::status mpl311::set_mode(mpl311_mode_t mode)
+hal::status mpl::set_mode(mpl_mode_t mode)
 {
     // Read value of CTRL_REG1
     std::array<hal::byte, 1> ctrl_payload { CTRL_REG1 };
@@ -84,7 +84,7 @@ hal::status mpl311::set_mode(mpl311_mode_t mode)
 * @brief Trigger one-shot measurement by setting 
     CTRL_REG1_OST bit in CTRL_REG1.
 */
-hal::status mpl311::initiate_one_shot() 
+hal::status mpl::initiate_one_shot() 
 {
     // Wait for one-shot flag to clear
     poll_flag(CTRL_REG1, CTRL_REG1_OST, false);
@@ -100,7 +100,7 @@ hal::status mpl311::initiate_one_shot()
 * @param reg_addr: 8 bit register address
 * @param bits_to_set: 8 bit value specifying which bits to set in register
 */
-hal::status mpl311::modify_reg_bits(hal::byte reg_addr, hal::byte bits_to_set)
+hal::status mpl::modify_reg_bits(hal::byte reg_addr, hal::byte bits_to_set)
 {
     // Read old register value
     std::array<hal::byte, 1> reg_payload { reg_addr };
@@ -120,7 +120,7 @@ hal::status mpl311::modify_reg_bits(hal::byte reg_addr, hal::byte bits_to_set)
 * @param reg: 8 bit value specifying the register address
 * @param flag: 8 bit value specifying which bit(s) to check
 */
-hal::status mpl311::poll_flag(hal::byte reg, hal::byte flag, bool desired_state)
+hal::status mpl::poll_flag(hal::byte reg, hal::byte flag, bool desired_state)
 {   
     std::array<hal::byte, 1> status_payload { reg };
     std::array<hal::byte, 1> status_buffer {};
@@ -146,7 +146,7 @@ hal::status mpl311::poll_flag(hal::byte reg, hal::byte flag, bool desired_state)
 * @brief Read pressure data from OUT_T_MSB_R and OUT_T_LSB_R
 *   and perform temperature conversion to celsius.
 */
-hal::result<mpl311::temperature_read_t> mpl311::t_read()
+hal::result<mpl::temperature_read_t> mpl::t_read()
 {
     constexpr float temp_conversion_factor = 256.0f;
 
@@ -160,7 +160,7 @@ hal::result<mpl311::temperature_read_t> mpl311::t_read()
     HAL_CHECK(hal::write_then_read(*m_i2c, device_address, temp_payload, temp_buffer, hal::never_timeout()));
 
     int16_t temp_reading = int16_t(temp_buffer[0]) << 8 | int16_t(temp_buffer[1]);
-    return mpl311::temperature_read_t {
+    return mpl::temperature_read_t {
         static_cast<float>(temp_reading) / temp_conversion_factor,
     };
 }
@@ -169,7 +169,7 @@ hal::result<mpl311::temperature_read_t> mpl311::t_read()
 * @brief Read pressure data from OUT_P_MSB_R, OUT_P_CSB_R, and OUT_P_LSB_R
 *   and perform pressure conversion to kilopascals.
 */
-hal::result<mpl311::pressure_read_t> mpl311::p_read()
+hal::result<mpl::pressure_read_t> mpl::p_read()
 {
     // Note: 64 -> Pa, 6400 -> kPa
     constexpr float pressure_conversion_factor = 64.0f;
@@ -191,7 +191,7 @@ hal::result<mpl311::pressure_read_t> mpl311::p_read()
                               | uint32_t(pres_buffer[1]) << 8 
                               | uint32_t(pres_buffer[2]);
 
-    return mpl311::pressure_read_t {
+    return mpl::pressure_read_t {
        static_cast<float>(pressure_reading) / pressure_conversion_factor,
     };
 }
@@ -200,7 +200,7 @@ hal::result<mpl311::pressure_read_t> mpl311::p_read()
 * @brief Read pressure data from OUT_P_MSB_R, OUT_P_CSB_R, and OUT_P_LSB_R
 *   and perform altitude conversion to meters.
 */
-hal::result<mpl311::altitude_read_t> mpl311::a_read()
+hal::result<mpl::altitude_read_t> mpl::a_read()
 {
     constexpr float altitude_conversion_factor = 65536.0f;
 
@@ -221,7 +221,7 @@ hal::result<mpl311::altitude_read_t> mpl311::a_read()
                         | int32_t(alt_buffer[1]) << 16 
                         | int32_t(alt_buffer[2]) << 8;
 
-    return mpl311::altitude_read_t {
+    return mpl::altitude_read_t {
         static_cast<float>(alt_reading) / altitude_conversion_factor,
     };
 }
@@ -232,7 +232,7 @@ hal::result<mpl311::altitude_read_t> mpl311::a_read()
 * @param sea_level_pressure: Sea level pressure in Pascals. 
 *      - Default value on startup is 101,326 Pa.
 */
-hal::status mpl311::set_sea_pressure(float sea_level_pressure)
+hal::status mpl::set_sea_pressure(float sea_level_pressure)
 {
     // divide by 2 to convert to 2Pa per LSB
     uint16_t two_pa = (sea_level_pressure / 2);
@@ -253,7 +253,7 @@ hal::status mpl311::set_sea_pressure(float sea_level_pressure)
 * @brief Set altitude offset in OFF_H_R
 * @param offset Offset value in meters, from -127 to 128
 */
-hal::status mpl311::set_altitude_offset(int8_t offset)
+hal::status mpl::set_altitude_offset(int8_t offset)
 {
     std::array<hal::byte, 2> offset_payload = { OFF_H_R, hal::byte(offset) };
     HAL_CHECK(hal::write(*m_i2c, device_address, offset_payload, hal::never_timeout()));
@@ -261,4 +261,4 @@ hal::status mpl311::set_altitude_offset(int8_t offset)
     return hal::success();
 }
 
-}  // namespace hal::mpl311
+}  // namespace hal::mpl

@@ -25,9 +25,9 @@
 #include <libhal/timeout.hpp>
 #include <libhal-util/serial.hpp>
 
-namespace hal::mpl311 {
+namespace hal::mpl {
 
-class mpl311
+class mpl
 {
 public:
     // default 7-bit I2C device address is 0b110'0000
@@ -37,7 +37,7 @@ public:
     typedef enum {
         BAROMETER_M = 0,
         ALTIMETER_M = 1,
-    } mpl311_mode_t;
+    } mpl_mode_t;
 
     struct temperature_read_t
     {
@@ -55,7 +55,7 @@ public:
     };
 
 /** ---------- Public Functions ---------- **/
-    [[nodiscard]] static result<mpl311> create(hal::i2c& i2c);
+    [[nodiscard]] static result<mpl> create(hal::i2c& i2c);
 
     // Reset & Configure device
     hal::status driver_configure();
@@ -84,14 +84,14 @@ private:
     hal::i2c* m_i2c;
 
     // Variable to track current sensor mode to determine if CTRL_REG1 ALT flag needs to be set.
-    mpl311_mode_t sensor_mode;
+    mpl_mode_t sensor_mode;
 
 /** ---------- Private Functions ---------- **/
     /// @param i2c The I2C peripheral used for communication with the device.
-    explicit mpl311(hal::i2c& p_i2c);
+    explicit mpl(hal::i2c& p_i2c);
 
     // Set bit 7 (ALT - mode control) to the binary value of mode
-    hal::status set_mode(mpl311_mode_t mode = BAROMETER_M);
+    hal::status set_mode(mpl_mode_t mode = BAROMETER_M);
 
     // Set specified bits in a register while maintaining its current state
     hal::status modify_reg_bits(hal::byte reg_addr, hal::byte bits_to_set);
@@ -112,4 +112,4 @@ private:
     hal::result<altitude_read_t> a_read();
 };
 
-}  // namespace hal::mpl311
+}  // namespace hal::mpl

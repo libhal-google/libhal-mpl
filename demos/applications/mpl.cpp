@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <libhal-mpl311/mpl311.hpp>
+#include <libhal-mpl/mpl.hpp>
 #include <libhal-util/serial.hpp>
 #include <libhal-util/steady_clock.hpp>
 
@@ -28,7 +28,7 @@ hal::status application(hardware_map& p_map)
   auto& i2c = *p_map.i2c;
 
   hal::print(console, "MPL3115A2 Demo Application Starting...\n\n");
-  auto mpl_311 = HAL_CHECK(hal::mpl311::mpl311::create(i2c));
+  auto mpl_311 = HAL_CHECK(hal::mpl::mpl::create(i2c));
 
   int8_t alt_offset = 0;
   mpl_311.set_altitude_offset(alt_offset);

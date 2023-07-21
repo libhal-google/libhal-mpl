@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace hal::mpl311 {
-extern void mpl311_test();
-}  // namespace hal::mpl311
+namespace hal::mpl {
+extern void mpl_test();
+}  // namespace hal::mpl
 
 int main()
 {
-  hal::mpl311::mpl311_test();
+  hal::mpl::mpl_test();
 }
