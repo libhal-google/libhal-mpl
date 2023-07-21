@@ -1,7 +1,23 @@
 #include "libhal-mpl311/mpl311.hpp"
 
+#include "mpl_reg.hpp"
+
 using namespace std::literals;
 namespace hal::mpl311 {
+
+mpl311::mpl311(hal::i2c& p_i2c)
+    : m_i2c(&p_i2c)
+{}
+
+result<mpl311> mpl311::create(hal::i2c& i2c)
+{
+    mpl311 mpl_311(i2c);
+    if (!mpl_311.driver_configure()) {
+        return hal::new_error();
+    }
+
+    return mpl_311;
+}
 
 /*
 * @brief Startup configuration of MPL311X device.
@@ -11,7 +27,7 @@ namespace hal::mpl311 {
     - Set oversampling ratio to 2^128 (OS128)
     - Enable data ready events for pressure/altitude and temperature
 */
-hal::status mpl311::begin()
+hal::status mpl311::driver_configure()
 {
     // sanity check
     std::array<hal::byte, 1> whoami_payload { WHOAMI_R };
@@ -25,19 +41,11 @@ hal::status mpl311::begin()
     // software reset
     modify_reg_bits(CTRL_REG1, CTRL_REG1_RST);
 
-    std::array<hal::byte, 1> ctrl_payload { CTRL_REG1 };
-    std::array<hal::byte, 1> ctrl_buffer {};
-    bool reset_cleared = false;
-    while (!reset_cleared) {
-        hal::delay(*m_clk, 10ms);
-        HAL_CHECK(hal::write_then_read(*m_i2c, device_address, ctrl_payload, ctrl_buffer, hal::never_timeout()));
-        reset_cleared = !(ctrl_buffer[0] & CTRL_REG1_RST);
-    }
+    poll_flag(CTRL_REG1, CTRL_REG1_RST, false);
 
     // set oversampling ratio to 2^128 and set altitude mode
-    sensor_mode = ALTIMETER_M;
-
     modify_reg_bits(CTRL_REG1, CTRL_REG1_OS128 | CTRL_REG1_ALT );
+    sensor_mode = ALTIMETER_M;
 
     // enable data ready events for pressure/altitude and temperature
     std::array<hal::byte, 2> dr_payload {
@@ -78,22 +86,11 @@ hal::status mpl311::set_mode(mpl311_mode_t mode)
 */
 hal::status mpl311::initiate_one_shot() 
 {
-    // wait for one-shot to clear before proceeding
-    std::array<hal::byte, 1> ctrl_payload { CTRL_REG1 };
-    std::array<hal::byte, 1> ctrl_buffer {};
-    
-    while (1) {
-        HAL_CHECK(hal::write_then_read(*m_i2c, device_address, ctrl_payload, ctrl_buffer, hal::never_timeout()));
-        if (!(ctrl_buffer[0] & CTRL_REG1_OST))
-            break;
-
-        hal::delay(*m_clk, 5ms);
-    }
+    // Wait for one-shot flag to clear
+    poll_flag(CTRL_REG1, CTRL_REG1_OST, false);
 
     // Set ost bit in CTRL_REG1 - initiate one shot measurement
-    hal::byte ost_set_reg = ctrl_buffer[0] |= CTRL_REG1_OST;
-    std::array<hal::byte, 2> ctrl_write { CTRL_REG1, ost_set_reg };
-    HAL_CHECK(hal::write(*m_i2c, device_address, ctrl_write, hal::never_timeout()));
+    HAL_CHECK(modify_reg_bits(CTRL_REG1, CTRL_REG1_OST));
 
     return hal::success();
 }
@@ -108,7 +105,6 @@ hal::status mpl311::modify_reg_bits(hal::byte reg_addr, hal::byte bits_to_set)
     // Read old register value
     std::array<hal::byte, 1> reg_payload { reg_addr };
     std::array<hal::byte, 1> reg_buffer {};
-
     HAL_CHECK(hal::write_then_read(*m_i2c, device_address, reg_payload, reg_buffer, hal::never_timeout()));
 
     // Set specified bits while maintaining old values
@@ -120,17 +116,30 @@ hal::status mpl311::modify_reg_bits(hal::byte reg_addr, hal::byte bits_to_set)
 }
 
 /*
-* @brief Check if specific bit(s) are set in STATUS_R
-* @param flag: 8 bit value specifying which bits to check
+* @brief Wait for a specified flag bit in a register to be set to the desired state.
+* @param reg: 8 bit value specifying the register address
+* @param flag: 8 bit value specifying which bit(s) to check
 */
-hal::result<bool> mpl311::check_data_ready_flag(hal::byte flag)
+hal::status mpl311::poll_flag(hal::byte reg, hal::byte flag, bool desired_state)
 {   
-    // Read value of CTRL_REG1
-    std::array<hal::byte, 1> status_payload { STATUS_R };
+    std::array<hal::byte, 1> status_payload { reg };
     std::array<hal::byte, 1> status_buffer {};
-    HAL_CHECK(hal::write_then_read(*m_i2c, device_address, status_payload, status_buffer, hal::never_timeout()));
+    bool flag_set = true;
 
-    return ((status_buffer[0] & flag) != 0);
+    while (flag_set) {
+        hal::result<hal::i2c::transaction_t> res = hal::write_then_read(
+                                                            *m_i2c, 
+                                                            device_address, 
+                                                            status_payload, 
+                                                            status_buffer, 
+                                                            hal::never_timeout());
+        // Only update when no errors (catch device not found)
+        if (res) {
+            flag_set = desired_state ? ((status_buffer[0] & flag) == 0) : ((status_buffer[0] & flag) != 0);
+        }
+    }
+
+    return hal::success();
 }
 
 /*
@@ -139,18 +148,16 @@ hal::result<bool> mpl311::check_data_ready_flag(hal::byte flag)
 */
 hal::result<mpl311::temperature_read_t> mpl311::t_read()
 {
-    initiate_one_shot();
-    while (!HAL_CHECK(check_data_ready_flag(STATUS_TDR)))
-        hal::delay(*m_clk, 5ms);
-    
     constexpr float temp_conversion_factor = 256.0f;
+
+    initiate_one_shot();
+
+    poll_flag(STATUS_R, STATUS_TDR, true);
 
     // Read data from OUT_T_MSB_R and OUT_T_LSB_R
     std::array<hal::byte, 1> temp_payload = { OUT_T_MSB_R };
     std::array<hal::byte, 2> temp_buffer {};
     HAL_CHECK(hal::write_then_read(*m_i2c, device_address, temp_payload, temp_buffer, hal::never_timeout()));
-    // TODO: Figure out this bug in i2c driver
-    // hal::delay(*m_clk, 1ms);
 
     int16_t temp_reading = int16_t(temp_buffer[0]) << 8 | int16_t(temp_buffer[1]);
     return mpl311::temperature_read_t {
@@ -164,14 +171,16 @@ hal::result<mpl311::temperature_read_t> mpl311::t_read()
 */
 hal::result<mpl311::pressure_read_t> mpl311::p_read()
 {
-    if (sensor_mode != BAROMETER_M)
-        set_mode(BAROMETER_M);
-    initiate_one_shot();
-    while (!HAL_CHECK(check_data_ready_flag(STATUS_PDR)))
-        hal::delay(*m_clk, 5ms);
-
     // Note: 64 -> Pa, 6400 -> kPa
     constexpr float pressure_conversion_factor = 64.0f;
+
+    if (sensor_mode != BAROMETER_M) {
+        set_mode(BAROMETER_M);
+    }
+
+    initiate_one_shot();
+
+    poll_flag(STATUS_R, STATUS_PDR, true);
 
     // Read data from OUT_P_MSB_R, OUT_P_CSB_R, and OUT_P_LSB_R
     std::array<hal::byte, 1> pres_payload = { OUT_P_MSB_R };
@@ -193,13 +202,15 @@ hal::result<mpl311::pressure_read_t> mpl311::p_read()
 */
 hal::result<mpl311::altitude_read_t> mpl311::a_read()
 {
-    if (sensor_mode != ALTIMETER_M)
-        set_mode(ALTIMETER_M);
-    initiate_one_shot();
-    while (!HAL_CHECK(check_data_ready_flag(STATUS_PDR)))
-        hal::delay(*m_clk, 5ms);
-
     constexpr float altitude_conversion_factor = 65536.0f;
+
+    if (sensor_mode != ALTIMETER_M) {
+        set_mode(ALTIMETER_M);
+    }
+
+    initiate_one_shot();
+
+    poll_flag(STATUS_R, STATUS_PDR, true);
 
     // Read data from OUT_P_MSB_R, OUT_P_CSB_R, and OUT_P_LSB_R
     std::array<hal::byte, 1> alt_payload = { OUT_P_MSB_R };
@@ -217,19 +228,20 @@ hal::result<mpl311::altitude_read_t> mpl311::a_read()
 
 /*
 * @brief Set sea level pressure (Barometric input for altitude calculations)
-    in BAR_IN_MSB_R and BAR_IN_LSB_R registers
-* @param sea_level_pressure: Sea level pressure in Pascals. Default is 101,326 Pa.
+         in BAR_IN_MSB_R and BAR_IN_LSB_R registers
+* @param sea_level_pressure: Sea level pressure in Pascals. 
+*      - Default value on startup is 101,326 Pa.
 */
 hal::status mpl311::set_sea_pressure(float sea_level_pressure)
 {
-    // divide by 2 to convert to 2 Pa per LSB
-    uint16_t bar = (sea_level_pressure / 2);
+    // divide by 2 to convert to 2Pa per LSB
+    uint16_t two_pa = (sea_level_pressure / 2);
 
     // write result to register
     std::array<hal::byte, 3> slp_payload = { 
         BAR_IN_MSB_R, 
-        bar >> 8,  // msb
-        bar & 0xFF // lsb
+        two_pa >> 8,  // msb
+        two_pa & 0xFF // lsb
     };
 
     HAL_CHECK(hal::write(*m_i2c, device_address, slp_payload, hal::never_timeout()));

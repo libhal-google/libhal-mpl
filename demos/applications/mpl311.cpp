@@ -28,18 +28,14 @@ hal::status application(hardware_map& p_map)
   auto& i2c = *p_map.i2c;
 
   hal::print(console, "MPL3115A2 Demo Application Starting...\n\n");
-  auto mpl_311 = HAL_CHECK(hal::mpl311::mpl311::create(i2c, clock));
+  auto mpl_311 = HAL_CHECK(hal::mpl311::mpl311::create(i2c));
 
-  if (!mpl_311.begin()) {
-    hal::print(console, "Begin Failed../");
-    return hal::new_error();
-  }
+  int8_t alt_offset = 0;
+  mpl_311.set_altitude_offset(alt_offset);
 
-  // int8_t alt_offset = 23;
-  // mpl_311.set_altitude_offset(alt_offset);
-
-  // float slp = 101325;
-  // mpl_311.set_sea_pressure(slp);
+  // Set sea level pressure to 30 Hg
+  float slp = 101591; // Default is 101325 Pa
+  mpl_311.set_sea_pressure(slp);
 
   while (true) {
     hal::delay(clock, 500ms);
