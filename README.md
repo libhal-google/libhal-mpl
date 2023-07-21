@@ -1,13 +1,13 @@
-# libhal-__device__
+# libhal-mpl
 
-[![✅ Checks](https://github.com/libhal/libhal-__device__/actions/workflows/ci.yml/badge.svg)](https://github.com/libhal/libhal-__device__/actions/workflows/ci.yml)
-[![Coverage](https://libhal.github.io/libhal-__device__/coverage/coverage.svg)](https://libhal.github.io/libhal-__device__/coverage/)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/b084e6d5962d49a9afcb275d62cd6586)](https://www.codacy.com/gh/libhal/libhal-__device__/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=libhal/libhal-__device__&amp;utm_campaign=Badge_Grade)
-[![GitHub stars](https://img.shields.io/github/stars/libhal/libhal-__device__.svg)](https://github.com/libhal/libhal-__device__/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/libhal/libhal-__device__.svg)](https://github.com/libhal/libhal-__device__/network)
-[![GitHub issues](https://img.shields.io/github/issues/libhal/libhal-__device__.svg)](https://github.com/libhal/libhal-__device__/issues)
+[![✅ Checks](https://github.com/libhal/libhal-mpl/actions/workflows/ci.yml/badge.svg)](https://github.com/libhal/libhal-mpl/actions/workflows/ci.yml)
+[![Coverage](https://libhal.github.io/libhal-mpl/coverage/coverage.svg)](https://libhal.github.io/libhal-mpl/coverage/)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/b084e6d5962d49a9afcb275d62cd6586)](https://www.codacy.com/gh/libhal/libhal-mpl/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=libhal/libhal-mpl&amp;utm_campaign=Badge_Grade)
+[![GitHub stars](https://img.shields.io/github/stars/libhal/libhal-mpl.svg)](https://github.com/libhal/libhal-mpl/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/libhal/libhal-mpl.svg)](https://github.com/libhal/libhal-mpl/network)
+[![GitHub issues](https://img.shields.io/github/issues/libhal/libhal-mpl.svg)](https://github.com/libhal/libhal-mpl/issues)
 
-libhal compatible device library for the __device__ device.
+libhal compatible device library for the MPL3115A2 device.
 
 ## Contributing
 
@@ -22,23 +22,6 @@ Apache 2.0; see [`LICENSE`](LICENSE) for details.
 This project is not an official Google project. It is not supported by
 Google and Google specifically disclaims all warranties as to its quality,
 merchantability, or fitness for a particular purpose.
-
-**AFTER CLONING DELETE THE SECTION BELOW AND ADD YOUR OWN CONTENT**.
-
-## Making a new device driver
-
-To make your own libhal library:
-
-1. press the green "Use this Template" button then
-2. press the "Create a new repository".
-3. Name it `libhal-<insert_device_name>` and replace `<insert_device_name>` with
-  the name of the device's family. For exmaple, if you want to make a library
-  for the MPU series of IMUs then call it `libhal-mpu`.
-4. Choose where to put the repo under,
-5. Go to `settings` > `Pages` > `Build and deployment` > `Source` and set the
-  source to `Github Actions`.
-6. Go to `Pull Requests` and merge the library rename pull request.
-7. Done!
 
 ## About the libhal-device template
 
@@ -81,7 +64,7 @@ the datasheet (and potentially mirrors of it) is an acceptable alternative.
 This directory contains demonstration applications showing how to use the device
 library. It includes:
 
-- `applications/__device__.cpp`: A sample application demonstrating usage of the
+- `applications/MPL3115A2.cpp`: A sample application demonstrating usage of the
   device library.
 - `hardware_map.hpp`: A header file defining the hardware map for the demo
   applications.
@@ -89,16 +72,16 @@ library. It includes:
 - `platforms/lpc4074.cpp` and `platforms/lpc4078.cpp`: Platform-specific
   implementations for the demo applications.
 
-## include/libhal-__device__
+## include/libhal-mpl
 
 This directory contains the header files for the device library. It currently
-includes `__device__.hpp`, which is a placeholder for the main header file of
+includes `mpl.hpp`, which is a placeholder for the main header file of
 your device library.
 
 ## src
 
 This directory contains the source files for the device library. It currently
-includes `__device__.cpp`, which is a placeholder for the main source file of
+includes `mpl.cpp`, which is a placeholder for the main source file of
 your device library.
 
 ## test_package
@@ -111,8 +94,8 @@ Conan recipe is working correctly.
 
 This directory contains tests for the device library. It includes:
 
-- `__device__.test.cpp`: A placeholder for tests for the device library.
+- `mpl.test.cpp`: A placeholder for tests for the device library.
 - `main.test.cpp`: The main entry point for the tests.
 
-Remember to replace all instances of `__device__` with the actual name of the
+Remember to replace all instances of `mpl` with the actual name of the
 device that your library is being built for.
