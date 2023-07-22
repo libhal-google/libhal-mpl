@@ -21,10 +21,7 @@
 
 #include <libhal-mpl/mpl.hpp>
 
-int main()
-{
-  //hal::mpl bar;
-}
+int main() {}
 
 namespace boost {
 void throw_exception(std::exception const& e)

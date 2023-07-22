@@ -14,31 +14,24 @@
 
 #pragma once
 
-#include <span>
 #include <array>
 
-#include <libhal/error.hpp>
 #include <libhal/units.hpp>
-#include <libhal-util/as_bytes.hpp>
 #include <libhal-util/i2c.hpp>
 #include <libhal/i2c.hpp>
 #include <libhal/timeout.hpp>
-#include <libhal-util/serial.hpp>
 
 namespace hal::mpl {
 
 class mpl
 {
 public:
-    // default 7-bit I2C device address is 0b110'0000
-    static constexpr hal::byte device_address = 0x60;
-
-/** ---------- Typedefs ---------- **/
-    typedef enum {
+    // Keep track of the current set mode bit in ctrl_reg1
+    enum class mpl_mode_t {
         BAROMETER_M = 0,
         ALTIMETER_M = 1,
-    } mpl_mode_t;
-
+    };
+    
     struct temperature_read_t
     {
         celsius temperature;
@@ -54,62 +47,87 @@ public:
         meters altitude;
     };
 
-/** ---------- Public Functions ---------- **/
     [[nodiscard]] static result<mpl> create(hal::i2c& i2c);
 
-    // Reset & Configure device
-    hal::status driver_configure();
+    /*
+    * @brief Read pressure data from out_t_msb_r and out_t_lsb_r
+    *        and perform temperature conversion to celsius.
+    */
+    [[nodiscard]] hal::result<temperature_read_t> read_temperature();
 
-    [[nodiscard]] hal::result<temperature_read_t> read_temperature()
-    {
-        return t_read();
-    }
+    /*
+    * @brief Read pressure data from out_p_msb_r, out_p_csb_r, and out_p_lsb_r
+    *        and perform pressure conversion to kilopascals.
+    */
+    [[nodiscard]] hal::result<pressure_read_t> read_pressure();
 
-    [[nodiscard]] hal::result<pressure_read_t> read_pressure()
-    {
-        return p_read();
-    }
+    /*
+    * @brief Read altitude data from out_p_msb_r, out_p_csb_r, and out_p_lsb_r
+    *        and perform altitude conversion to meters.
+    */
+    [[nodiscard]] hal::result<altitude_read_t> read_altitude();
 
-    [[nodiscard]] hal::result<altitude_read_t> read_altitude()
-    {
-        return a_read();
-    }
-
+    /*
+    * @brief Set sea level pressure (Barometric input for altitude calculations)
+    *        in bar_in_msb_r and bar_in_lsb_r registers
+    * @param sea_level_pressure: Sea level pressure in Pascals. 
+    *        Default value on startup is 101,326 Pa.
+    */
     hal::status set_sea_pressure(float sea_level_pressure);
     
+    /*
+    * @brief Set altitude offset in off_h_r
+    * @param offset Offset value in meters, from -127 to 128
+    */
     hal::status set_altitude_offset(int8_t offset);
 
 private:
-    /// The I2C peripheral used for communication with the device.
+    /// @param i2c The I2C peripheral used for communication with the device.
+    explicit mpl(hal::i2c& p_i2c);
+
+    /**
+     * @brief Initialization of MPLX device.
+     *
+     * This function performs the following steps during startup configuration:
+     *   - Perform WHOAMI check
+     *   - Trigger reset and wait for completion
+     *   - Set altimeter mode
+     *   - Set oversampling ratio to 2^128 (OS128)
+     *   - Enable data ready events for pressure/altitude and temperature
+     */
+    hal::status init();
+
+    /*
+    * @brief Set the ctrl_reg1_alt bit in ctrl_reg1 to the value corresponding to 'mode'
+    * @param mode: The desired operation mode
+    */
+    hal::status set_mode(mpl_mode_t mode = mpl_mode_t::BAROMETER_M);
+
+    /*
+    * @brief Set bits in a register without overwriting existing register state
+    * @param reg_addr: 8 bit register address
+    * @param bits_to_set: 8 bit value specifying which bits to set in register
+    */
+    hal::status modify_reg_bits(hal::byte reg_addr, hal::byte bits_to_set);
+
+    /*
+    * @brief Trigger one-shot measurement by setting 
+    *        ctrl_reg1_ost bit in ctrl_reg1.
+    */
+    hal::status initiate_one_shot();
+
+    /*
+    * @brief Wait for a specified flag bit in a register to be set to the desired state.
+    * @param reg: 8 bit value specifying the register address
+    * @param flag: 8 bit value specifying which bit(s) to check
+    */
+    hal::status poll_flag(hal::byte reg, hal::byte flag, bool end_state);
+
+    // The I2C peripheral used for communication with the device.
     hal::i2c* m_i2c;
 
     // Variable to track current sensor mode to determine if CTRL_REG1 ALT flag needs to be set.
     mpl_mode_t sensor_mode;
-
-/** ---------- Private Functions ---------- **/
-    /// @param i2c The I2C peripheral used for communication with the device.
-    explicit mpl(hal::i2c& p_i2c);
-
-    // Set bit 7 (ALT - mode control) to the binary value of mode
-    hal::status set_mode(mpl_mode_t mode = BAROMETER_M);
-
-    // Set specified bits in a register while maintaining its current state
-    hal::status modify_reg_bits(hal::byte reg_addr, hal::byte bits_to_set);
-
-    // Trigger a one-shot sample collection for the currently set mode.
-    hal::status initiate_one_shot();
-
-    // Check if the flag bit(s) are set in the specified register
-    hal::status poll_flag(hal::byte reg, hal::byte flag, bool end_state);
-
-    // Read and convert temperature values. Unit: celcius
-    hal::result<temperature_read_t> t_read(); 
-
-    // Read and convert pressure values. Unit: pascals
-    hal::result<pressure_read_t> p_read();
-
-    // Read and convert altitude values. Unit: meters
-    hal::result<altitude_read_t> a_read();
 };
 
 }  // namespace hal::mpl

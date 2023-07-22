@@ -25,11 +25,11 @@ required_conan_version = ">=1.50.0"
 
 class libhal_mpl_conan(ConanFile):
     name = "libhal-mpl"
-    version = "1.0.1"
+    version = "0.0.1"
     license = "Apache-2.0"
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://github.com/libhal/libhal-mpl"
-    description = ("A collection of drivers for the mpl3115A2X devices")
+    description = ("A collection of drivers for the mpl series absolute pressure devices")
     topics = ("mpl", "libhal", "driver")
     settings = "compiler", "build_type", "os", "arch"
     exports_sources = ("include/*", "tests/*", "LICENSE", "CMakeLists.txt",

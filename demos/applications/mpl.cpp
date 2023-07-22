@@ -27,30 +27,27 @@ hal::status application(hardware_map& p_map)
   auto& console = *p_map.console;
   auto& i2c = *p_map.i2c;
 
-  hal::print(console, "MPL3115A2 Demo Application Starting...\n\n");
+  hal::print(console, "\n\nMPL3115A2 Demo Application Starting...\n");
   auto mpl_311 = HAL_CHECK(hal::mpl::mpl::create(i2c));
 
   int8_t alt_offset = 0;
   mpl_311.set_altitude_offset(alt_offset);
 
   // Set sea level pressure to 30 Hg
-  float slp = 101591; // Default is 101325 Pa
+  float slp = 101325; // Default is 101325 Pa
   mpl_311.set_sea_pressure(slp);
 
   while (true) {
     hal::delay(clock, 500ms);
 
     auto temperature = HAL_CHECK(mpl_311.read_temperature()).temperature;
-    hal::print<32>(console, "Measured temperature = %f", temperature);
-    hal::print(console, " °C\n");
+    hal::print<42>(console, "Measured temperature = %f °C\n", temperature);
 
     auto pressure = HAL_CHECK(mpl_311.read_pressure()).pressure;
-    hal::print<32, float>(console, "Measured pressure = %f", pressure);
-    hal::print(console, " Pa\n");
+    hal::print<42>(console, "Measured pressure = %f Pa\n", pressure);
 
     auto altitude = HAL_CHECK(mpl_311.read_altitude()).altitude;
-    hal::print<32>(console, "Measured altitude = %f", altitude);
-    hal::print(console, " m\n\n");
+    hal::print<42>(console, "Measured altitude = %f m\n\n", altitude);
   }
 
   return hal::success();
