@@ -47,9 +47,19 @@ public:
         meters altitude;
     };
 
+    /**
+     * @brief Initialization of MPLX device.
+     *
+     * This function performs the following steps during startup configuration:
+     *   - Perform WHOAMI check
+     *   - Trigger reset and wait for completion
+     *   - Set altimeter mode
+     *   - Set oversampling ratio to 2^128 (OS128)
+     *   - Enable data ready events for pressure/altitude and temperature
+     */
     [[nodiscard]] static result<mpl> create(hal::i2c& i2c);
 
-    /*
+    /**
     * @brief Read pressure data from out_t_msb_r and out_t_lsb_r
     *        and perform temperature conversion to celsius.
     */
@@ -61,13 +71,13 @@ public:
     */
     [[nodiscard]] hal::result<pressure_read_t> read_pressure();
 
-    /*
+    /**
     * @brief Read altitude data from out_p_msb_r, out_p_csb_r, and out_p_lsb_r
     *        and perform altitude conversion to meters.
     */
     [[nodiscard]] hal::result<altitude_read_t> read_altitude();
 
-    /*
+    /**
     * @brief Set sea level pressure (Barometric input for altitude calculations)
     *        in bar_in_msb_r and bar_in_lsb_r registers
     * @param sea_level_pressure: Sea level pressure in Pascals. 
@@ -75,30 +85,18 @@ public:
     */
     hal::status set_sea_pressure(float sea_level_pressure);
     
-    /*
+    /**
     * @brief Set altitude offset in off_h_r
     * @param offset Offset value in meters, from -127 to 128
     */
     hal::status set_altitude_offset(int8_t offset);
 
 private:
-    /*
+    /**
     * @brief constructor for mpl objects
     * @param p_i2c The I2C peripheral used for communication with the device.
     */
     explicit mpl(hal::i2c& p_i2c);
-
-    /**
-     * @brief Initialization of MPLX device.
-     *
-     * This function performs the following steps during startup configuration:
-     *   - Perform WHOAMI check
-     *   - Trigger reset and wait for completion
-     *   - Set altimeter mode
-     *   - Set oversampling ratio to 2^128 (OS128)
-     *   - Enable data ready events for pressure/altitude and temperature
-     */
-    hal::status init();
 
     /* The I2C peripheral used for communication with the device. */
     hal::i2c* m_i2c;

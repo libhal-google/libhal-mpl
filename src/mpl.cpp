@@ -5,11 +5,11 @@
 using namespace std::literals;
 namespace hal::mpl {
 
-/********************************************//**
+/***********************************************
  *  Free Functions
  ***********************************************/
 
-/*
+/**
 * @brief Set the ctrl_reg1_alt bit in ctrl_reg1 to the value corresponding to 'mode'
 * @param p_i2c The I2C peripheral used for communication with the device.
 * @param mode: The desired operation mode
@@ -34,7 +34,7 @@ hal::status set_mode(hal::i2c* p_i2c, mpl::mpl_mode_t mode)
     return hal::success();
 }
 
-/*
+/**
 * @brief Set bits in a register without overwriting existing register state
 * @param p_i2c The I2C peripheral used for communication with the device.
 * @param reg_addr: 8 bit register address
@@ -52,7 +52,7 @@ hal::status modify_reg_bits(hal::i2c* p_i2c, hal::byte reg_addr, hal::byte bits_
     return hal::success();
 }
 
-/*
+/**
 * @brief Wait for a specified flag bit in a register to be set to the desired state.
 * @param p_i2c The I2C peripheral used for communication with the device.
 * @param reg: 8 bit value specifying the register address
@@ -80,7 +80,7 @@ hal::status poll_flag(hal::i2c* p_i2c, hal::byte reg, hal::byte flag, bool desir
     return hal::success();
 }
 
-/*
+/**
 * @brief Trigger one-shot measurement by setting ctrl_reg1_ost bit in ctrl_reg1.
 * @param p_i2c The I2C peripheral used for communication with the device.
 */
@@ -95,7 +95,7 @@ hal::status initiate_one_shot(hal::i2c* p_i2c)
     return hal::success();
 }
 
-/********************************************//**
+/***********************************************
  *  MPL Class Functions
  ***********************************************/
 
@@ -103,30 +103,25 @@ mpl::mpl(hal::i2c& p_i2c)
     : m_i2c(&p_i2c)
 {}
 
-result<mpl> mpl::create(hal::i2c& i2c)
+result<mpl> mpl::create(hal::i2c& p_i2c)
 {
-    mpl mpl_dev(i2c);
-    HAL_CHECK(mpl_dev.init());
-    return mpl_dev;
-}
-
-hal::status mpl::init()
-{
+    mpl mpl_dev(p_i2c);
+    
     // sanity check
-    auto whoami_buffer = HAL_CHECK(hal::write_then_read<1>(*m_i2c, device_address, std::array<hal::byte, 1>{ whoami_r }, hal::never_timeout()));
+    auto whoami_buffer = HAL_CHECK(hal::write_then_read<1>(p_i2c, device_address, std::array<hal::byte, 1>{ whoami_r }, hal::never_timeout()));
 
     if (whoami_buffer[0] != 0xC4) {
         return hal::new_error();
     }
 
     // software reset
-    modify_reg_bits(m_i2c, ctrl_reg1, ctrl_reg1_rst);
+    modify_reg_bits(&p_i2c, ctrl_reg1, ctrl_reg1_rst);
 
-    poll_flag(m_i2c, ctrl_reg1, ctrl_reg1_rst, false);
+    poll_flag(&p_i2c, ctrl_reg1, ctrl_reg1_rst, false);
 
     // set oversampling ratio to 2^128 and set altitude mode
-    modify_reg_bits(m_i2c, ctrl_reg1, ctrl_reg1_os128 | ctrl_reg1_alt );
-    sensor_mode = mpl_mode_t::ALTIMETER_M;
+    modify_reg_bits(&p_i2c, ctrl_reg1, ctrl_reg1_os128 | ctrl_reg1_alt );
+    mpl_dev.sensor_mode = mpl_mode_t::ALTIMETER_M;
 
     // enable data ready events for pressure/altitude and temperature
     std::array<hal::byte, 2> dr_payload {
@@ -135,9 +130,9 @@ hal::status mpl::init()
         pt_data_cfg_pdefe |
         pt_data_cfg_drem
     };
-    HAL_CHECK(hal::write(*m_i2c, device_address, dr_payload, hal::never_timeout()));
+    HAL_CHECK(hal::write(p_i2c, device_address, dr_payload, hal::never_timeout()));
 
-    return hal::success();
+    return mpl_dev;
 }
 
 hal::status mpl::set_sea_pressure(float sea_level_pressure)
