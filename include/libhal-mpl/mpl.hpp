@@ -26,12 +26,12 @@ namespace hal::mpl {
 class mpl
 {
 public:
-    // Keep track of the current set mode bit in ctrl_reg1
+    /* Keep track of the current set mode bit in ctrl_reg1 */
     enum class mpl_mode_t {
         BAROMETER_M = 0,
         ALTIMETER_M = 1,
     };
-    
+
     struct temperature_read_t
     {
         celsius temperature;
@@ -82,7 +82,10 @@ public:
     hal::status set_altitude_offset(int8_t offset);
 
 private:
-    /// @param i2c The I2C peripheral used for communication with the device.
+    /*
+    * @brief constructor for mpl objects
+    * @param p_i2c The I2C peripheral used for communication with the device.
+    */
     explicit mpl(hal::i2c& p_i2c);
 
     /**
@@ -97,36 +100,10 @@ private:
      */
     hal::status init();
 
-    /*
-    * @brief Set the ctrl_reg1_alt bit in ctrl_reg1 to the value corresponding to 'mode'
-    * @param mode: The desired operation mode
-    */
-    hal::status set_mode(mpl_mode_t mode = mpl_mode_t::BAROMETER_M);
-
-    /*
-    * @brief Set bits in a register without overwriting existing register state
-    * @param reg_addr: 8 bit register address
-    * @param bits_to_set: 8 bit value specifying which bits to set in register
-    */
-    hal::status modify_reg_bits(hal::byte reg_addr, hal::byte bits_to_set);
-
-    /*
-    * @brief Trigger one-shot measurement by setting 
-    *        ctrl_reg1_ost bit in ctrl_reg1.
-    */
-    hal::status initiate_one_shot();
-
-    /*
-    * @brief Wait for a specified flag bit in a register to be set to the desired state.
-    * @param reg: 8 bit value specifying the register address
-    * @param flag: 8 bit value specifying which bit(s) to check
-    */
-    hal::status poll_flag(hal::byte reg, hal::byte flag, bool end_state);
-
-    // The I2C peripheral used for communication with the device.
+    /* The I2C peripheral used for communication with the device. */
     hal::i2c* m_i2c;
 
-    // Variable to track current sensor mode to determine if CTRL_REG1 ALT flag needs to be set.
+    /* Variable to track current sensor mode to determine if CTRL_REG1 ALT flag needs to be set. */
     mpl_mode_t sensor_mode;
 };
 
