@@ -17,8 +17,8 @@ name: ✅ CI
 on:
   workflow_dispatch:
   pull_request:
-  release:
-    types: [published]
+    release:
+      types: [published]
   push:
     branches:
       - main
