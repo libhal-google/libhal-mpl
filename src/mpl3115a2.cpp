@@ -121,7 +121,7 @@ hal::status poll_reset(hal::i2c* p_i2c)
 * @param p_i2c The I2C peripheral used for communication with the device.
 * @param p_reg_addr: 8 bit value specifying the register address
 * @param p_flag: 8 bit value specifying which bit(s) to check
-* @param p_desired_state: todo
+* @param p_desired_state: The desired final of the flag. When this state is reached, the function will exit.
 */
 hal::status poll_flag(hal::i2c* p_i2c, hal::byte p_reg_addr, hal::byte p_flag, bool p_desired_state)
 {   
