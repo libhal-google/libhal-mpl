@@ -13,10 +13,10 @@
 // limitations under the License.
 
 namespace hal::mpl {
-extern void mpl_test();
+extern void mpl3115a2_test();
 }  // namespace hal::mpl
 
 int main()
 {
-  hal::mpl::mpl_test();
+  hal::mpl::mpl3115a2_test();
 }

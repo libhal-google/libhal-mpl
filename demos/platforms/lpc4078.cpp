@@ -15,10 +15,11 @@
 #include <libhal-armcortex/dwt_counter.hpp>
 #include <libhal-armcortex/startup.hpp>
 #include <libhal-armcortex/system_control.hpp>
+
 #include <libhal-lpc40/clock.hpp>
 #include <libhal-lpc40/constants.hpp>
-#include <libhal-lpc40/uart.hpp>
 #include <libhal-lpc40/i2c.hpp>
+#include <libhal-lpc40/uart.hpp>
 #include <libhal-util/as_bytes.hpp>
 
 #include "../hardware_map.hpp"
@@ -52,9 +53,10 @@ hal::result<hardware_map> initialize_platform()
                                                       }));
 
   // Get and initialize I2C
-  static auto i2c2 = HAL_CHECK((hal::lpc40::i2c::get(2, 
-    hal::i2c::settings{ .clock_rate = 100.0_kHz, }
-  )));
+  static auto i2c2 = HAL_CHECK((hal::lpc40::i2c::get(2,
+                                                     hal::i2c::settings{
+                                                       .clock_rate = 100.0_kHz,
+                                                     })));
 
   return hardware_map{
     .console = &uart0,

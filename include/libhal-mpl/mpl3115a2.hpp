@@ -14,95 +14,97 @@
 
 #pragma once
 
-#include <libhal/units.hpp>
 #include <libhal/i2c.hpp>
 #include <libhal/timeout.hpp>
+#include <libhal/units.hpp>
 
 namespace hal::mpl {
 
 class mpl3115a2
 {
 public:
-    /* Keep track of the current set mode bit in ctrl_reg1 */
-    enum class mode {
-        barometer = 0,
-        altimeter = 1,
-    };
+  /* Keep track of the current set mode bit in ctrl_reg1 */
+  enum class mode
+  {
+    barometer = 0,
+    altimeter = 1,
+  };
 
-    struct temperature_read_t
-    {
-        celsius temperature;
-    };
+  struct temperature_read_t
+  {
+    celsius temperature;
+  };
 
-    struct pressure_read_t
-    {
-        float pressure; // Pascals (Pa)
-    };
+  struct pressure_read_t
+  {
+    float pressure;  // Pascals (Pa)
+  };
 
-    struct altitude_read_t
-    {
-        meters altitude;
-    };
+  struct altitude_read_t
+  {
+    meters altitude;
+  };
 
-    /**
-     * @brief Initialization of MPLX device.
-     *
-     * This function performs the following steps during startup configuration:
-     *   - Perform WHOAMI check
-     *   - Trigger reset and wait for completion
-     *   - Set altimeter mode
-     *   - Set oversampling ratio to 2^128 (OS128)
-     *   - Enable data ready events for pressure/altitude and temperature
-     */
-    [[nodiscard]] static result<mpl3115a2> create(hal::i2c& p_i2c);
+  /**
+   * @brief Initialization of MPLX device.
+   *
+   * This function performs the following steps during startup configuration:
+   *   - Perform WHOAMI check
+   *   - Trigger reset and wait for completion
+   *   - Set altimeter mode
+   *   - Set oversampling ratio to 2^128 (OS128)
+   *   - Enable data ready events for pressure/altitude and temperature
+   */
+  [[nodiscard]] static result<mpl3115a2> create(hal::i2c& p_i2c);
 
-    /**
-    * @brief Read pressure data from out_t_msb_r and out_t_lsb_r
-    *        and perform temperature conversion to celsius.
-    */
-    [[nodiscard]] hal::result<temperature_read_t> read_temperature();
+  /**
+   * @brief Read pressure data from out_t_msb_r and out_t_lsb_r
+   *        and perform temperature conversion to celsius.
+   */
+  [[nodiscard]] hal::result<temperature_read_t> read_temperature();
 
-    /**
-    * @brief Read pressure data from out_p_msb_r, out_p_csb_r, and out_p_lsb_r
-    *        and perform pressure conversion to kilopascals.
-    */
-    [[nodiscard]] hal::result<pressure_read_t> read_pressure();
+  /**
+   * @brief Read pressure data from out_p_msb_r, out_p_csb_r, and out_p_lsb_r
+   *        and perform pressure conversion to kilopascals.
+   */
+  [[nodiscard]] hal::result<pressure_read_t> read_pressure();
 
-    /**
-    * @brief Read altitude data from out_p_msb_r, out_p_csb_r, and out_p_lsb_r
-    *        and perform altitude conversion to meters.
-    */
-    [[nodiscard]] hal::result<altitude_read_t> read_altitude();
+  /**
+   * @brief Read altitude data from out_p_msb_r, out_p_csb_r, and out_p_lsb_r
+   *        and perform altitude conversion to meters.
+   */
+  [[nodiscard]] hal::result<altitude_read_t> read_altitude();
 
-    /**
-    * @brief Set sea level pressure (Barometric input for altitude calculations)
-    *        in bar_in_msb_r and bar_in_lsb_r registers
-    * @param p_sea_level_pressure: Sea level pressure in Pascals. 
-    *        Default value on startup is 101,326 Pa.
-    */
-    hal::status set_sea_pressure(float p_sea_level_pressure);
-    
-    /**
-    * @brief Set altitude offset in off_h_r
-    * @param p_offset Offset value in meters, from -127 to 128
-    */
-    hal::status set_altitude_offset(int8_t p_offset);
+  /**
+   * @brief Set sea level pressure (Barometric input for altitude calculations)
+   *        in bar_in_msb_r and bar_in_lsb_r registers
+   * @param p_sea_level_pressure: Sea level pressure in Pascals.
+   *        Default value on startup is 101,326 Pa.
+   */
+  hal::status set_sea_pressure(float p_sea_level_pressure);
 
-    /* Maximum number of retries for polling operations. */
-    static constexpr uint16_t default_max_polling_retries = 10000;
+  /**
+   * @brief Set altitude offset in off_h_r
+   * @param p_offset Offset value in meters, from -127 to 128
+   */
+  hal::status set_altitude_offset(int8_t p_offset);
+
+  /* Maximum number of retries for polling operations. */
+  static constexpr uint16_t default_max_polling_retries = 10000;
 
 private:
-    /**
-    * @brief constructor for mpl objects
-    * @param p_i2c The I2C peripheral used for communication with the device.
-    */
-    explicit mpl3115a2(hal::i2c& p_i2c);
+  /**
+   * @brief constructor for mpl objects
+   * @param p_i2c The I2C peripheral used for communication with the device.
+   */
+  explicit mpl3115a2(hal::i2c& p_i2c);
 
-    /* The I2C peripheral used for communication with the device. */
-    hal::i2c* m_i2c;
+  /* The I2C peripheral used for communication with the device. */
+  hal::i2c* m_i2c;
 
-    /* Variable to track current sensor mode to determine if CTRL_REG1 ALT flag needs to be set. */
-    mode m_sensor_mode;
+  /* Variable to track current sensor mode to determine if CTRL_REG1 ALT flag
+   * needs to be set. */
+  mode m_sensor_mode;
 };
 
 }  // namespace hal::mpl
