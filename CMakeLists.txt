@@ -19,7 +19,7 @@ project(libhal-mpl VERSION 0.0.1 LANGUAGES CXX)
 find_package(libhal REQUIRED CONFIG)
 find_package(libhal-util REQUIRED CONFIG)
 
-add_library(libhal-mpl src/mpl.cpp)
+add_library(libhal-mpl src/mpl3115a2.cpp)
 
 target_include_directories(libhal-mpl PUBLIC include)
 target_compile_features(libhal-mpl PRIVATE cxx_std_20)

@@ -19,7 +19,7 @@
 #include <cstdlib>
 #include <exception>
 
-#include <libhal-mpl/mpl.hpp>
+#include <libhal-mpl/mpl3115a2.hpp>
 
 int main() {}
 

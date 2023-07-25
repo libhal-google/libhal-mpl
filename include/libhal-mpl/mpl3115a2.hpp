@@ -14,22 +14,19 @@
 
 #pragma once
 
-#include <array>
-
 #include <libhal/units.hpp>
-#include <libhal-util/i2c.hpp>
 #include <libhal/i2c.hpp>
 #include <libhal/timeout.hpp>
 
 namespace hal::mpl {
 
-class mpl
+class mpl3115a2
 {
 public:
     /* Keep track of the current set mode bit in ctrl_reg1 */
-    enum class mpl_mode_t {
-        BAROMETER_M = 0,
-        ALTIMETER_M = 1,
+    enum class mode {
+        barometer = 0,
+        altimeter = 1,
     };
 
     struct temperature_read_t
@@ -57,7 +54,7 @@ public:
      *   - Set oversampling ratio to 2^128 (OS128)
      *   - Enable data ready events for pressure/altitude and temperature
      */
-    [[nodiscard]] static result<mpl> create(hal::i2c& i2c);
+    [[nodiscard]] static result<mpl3115a2> create(hal::i2c& p_i2c);
 
     /**
     * @brief Read pressure data from out_t_msb_r and out_t_lsb_r
@@ -65,7 +62,7 @@ public:
     */
     [[nodiscard]] hal::result<temperature_read_t> read_temperature();
 
-    /*
+    /**
     * @brief Read pressure data from out_p_msb_r, out_p_csb_r, and out_p_lsb_r
     *        and perform pressure conversion to kilopascals.
     */
@@ -80,29 +77,29 @@ public:
     /**
     * @brief Set sea level pressure (Barometric input for altitude calculations)
     *        in bar_in_msb_r and bar_in_lsb_r registers
-    * @param sea_level_pressure: Sea level pressure in Pascals. 
+    * @param p_sea_level_pressure: Sea level pressure in Pascals. 
     *        Default value on startup is 101,326 Pa.
     */
-    hal::status set_sea_pressure(float sea_level_pressure);
+    hal::status set_sea_pressure(float p_sea_level_pressure);
     
     /**
     * @brief Set altitude offset in off_h_r
-    * @param offset Offset value in meters, from -127 to 128
+    * @param p_offset Offset value in meters, from -127 to 128
     */
-    hal::status set_altitude_offset(int8_t offset);
+    hal::status set_altitude_offset(int8_t p_offset);
 
 private:
     /**
     * @brief constructor for mpl objects
     * @param p_i2c The I2C peripheral used for communication with the device.
     */
-    explicit mpl(hal::i2c& p_i2c);
+    explicit mpl3115a2(hal::i2c& p_i2c);
 
     /* The I2C peripheral used for communication with the device. */
     hal::i2c* m_i2c;
 
     /* Variable to track current sensor mode to determine if CTRL_REG1 ALT flag needs to be set. */
-    mpl_mode_t sensor_mode;
+    mode m_sensor_mode;
 };
 
 }  // namespace hal::mpl

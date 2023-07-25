@@ -17,7 +17,7 @@
 #include <libhal/functional.hpp>
 #include <libhal/serial.hpp>
 #include <libhal/steady_clock.hpp>
-#include <libhal-lpc40/i2c.hpp>
+#include <libhal/i2c.hpp>
 
 struct hardware_map
 {
