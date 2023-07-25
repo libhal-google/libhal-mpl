@@ -18,6 +18,7 @@
 
 #include <libhal-lpc40/clock.hpp>
 #include <libhal-lpc40/constants.hpp>
+#include <libhal-lpc40/i2c.hpp>
 #include <libhal-lpc40/uart.hpp>
 
 #include "../hardware_map.hpp"
@@ -44,18 +45,17 @@ hal::result<hardware_map> initialize_platform()
   static std::array<hal::byte, 64> uart0_buffer{};
 
   // Get and initialize UART0 for UART based logging
-  static auto uart0 = HAL_CHECK((hal::lpc40::uart::get(
-                                  0,
-                                  uart0_buffer,
-                                  hal::serial::settings{
-                                    .baud_rate = 115200.0f,
-                                  })
-                                ));
+  static auto uart0 = HAL_CHECK((hal::lpc40::uart::get(0,
+                                                       uart0_buffer,
+                                                       hal::serial::settings{
+                                                         .baud_rate = 115200.0f,
+                                                       })));
 
   // Get and initialize I2C
-  static auto i2c2 = HAL_CHECK((hal::lpc40::i2c::get(2, 
-    hal::i2c::settings{ .clock_rate = 100.0_kHz, }
-  )));
+  static auto i2c2 = HAL_CHECK((hal::lpc40::i2c::get(2,
+                                                     hal::i2c::settings{
+                                                       .clock_rate = 100.0_kHz,
+                                                     })));
 
   return hardware_map{
     .console = &uart0,

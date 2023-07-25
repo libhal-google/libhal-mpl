@@ -34,7 +34,7 @@ hal::status application(hardware_map& p_map)
   mpl_device.set_altitude_offset(alt_offset);
 
   // Set sea level pressure to 30 Hg
-  float slp = 101325; // Default is 101325 Pa
+  float slp = 101325;  // Default is 101325 Pa
   mpl_device.set_sea_pressure(slp);
 
   while (true) {
