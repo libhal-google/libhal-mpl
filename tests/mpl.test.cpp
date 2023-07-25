@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <libhal-mpl311/mpl311.hpp>
+#include <libhal-mpl/mpl3115a2.hpp>
 
 #include <boost/ut.hpp>
 
-namespace hal::mpl311 {
-void mpl311_test()
+namespace hal::mpl {
+void mpl3115a2_test()
 {
   using namespace boost::ut;
   using namespace std::literals;
 
-  "mpl311::create()"_test = []() {
+  "mpl3115a2::create()"_test = []() {
     // Setup
     // Exercise
     // Verify
   };
 };
-}  // namespace hal::mpl311
+}  // namespace hal::mpl
