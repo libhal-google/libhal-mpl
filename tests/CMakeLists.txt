@@ -45,7 +45,7 @@ find_package(libhal-util REQUIRED CONFIG)
 find_package(libhal-mock REQUIRED CONFIG)
 
 add_executable(${PROJECT_NAME}
-  mpl.test.cpp
+  mpl3115a2.test.cpp
   main.test.cpp)
 
 target_include_directories(${PROJECT_NAME} PUBLIC . ../include)
