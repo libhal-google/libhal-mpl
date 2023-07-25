@@ -81,6 +81,7 @@ hal::status modify_reg_bits(hal::i2c* p_i2c, hal::byte p_reg_addr, hal::byte p_b
 hal::status poll_reset(hal::i2c* p_i2c)
 {   
     bool flag_set = true;
+    uint16_t retries = 0;
 
     // Lambda function to poll ctrl_reg1 reset flag
     auto poll_function = [&p_i2c, &flag_set]() -> hal::status
@@ -106,11 +107,12 @@ hal::status poll_reset(hal::i2c* p_i2c)
     };
 
     // Perform polling
-    while(flag_set) {
+    while(flag_set && (retries < mpl3115a2::default_max_polling_retries)) {
         HAL_CHECK(hal::attempt(
             poll_function,
             err_handler
         ));
+        retries++;
     }
 
     return hal::success();
@@ -127,9 +129,10 @@ hal::status poll_flag(hal::i2c* p_i2c, hal::byte p_reg_addr, hal::byte p_flag, b
 {   
     std::array<hal::byte, 1> status_payload { p_reg_addr };
     std::array<hal::byte, 1> status_buffer {};
+    uint16_t retries = 0;
     bool flag_set = true;
 
-    while (flag_set) {
+    while (flag_set && (retries < mpl3115a2::default_max_polling_retries)) {
         HAL_CHECK(hal::write_then_read(
                             *p_i2c, 
                             device_address, 
@@ -142,6 +145,7 @@ hal::status poll_flag(hal::i2c* p_i2c, hal::byte p_reg_addr, hal::byte p_flag, b
         } else {
             flag_set = ((status_buffer[0] & p_flag) != 0);
         }
+        retries++;
     }
 
     return hal::success();

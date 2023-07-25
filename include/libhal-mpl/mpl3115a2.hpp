@@ -88,6 +88,9 @@ public:
     */
     hal::status set_altitude_offset(int8_t p_offset);
 
+    /* Maximum number of retries for polling operations. */
+    static constexpr uint16_t default_max_polling_retries = 10000;
+
 private:
     /**
     * @brief constructor for mpl objects
