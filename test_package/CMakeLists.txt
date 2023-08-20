@@ -18,6 +18,11 @@ project(test_package LANGUAGES CXX)
 find_package(libhal-mpl REQUIRED CONFIG)
 
 add_executable(${PROJECT_NAME} main.cpp)
+
+if(BAREMETAL)
+  target_link_options(${PROJECT_NAME} PRIVATE --oslib=semihost)
+endif()
+
 target_include_directories(${PROJECT_NAME} PUBLIC .)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_link_libraries(${PROJECT_NAME} PRIVATE libhal::mpl)
