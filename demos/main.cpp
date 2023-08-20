@@ -43,6 +43,6 @@ int main()
 namespace boost {
 void throw_exception([[maybe_unused]] std::exception const& e)
 {
-  std::abort();
+  hal::halt();
 }
 }  // namespace boost
