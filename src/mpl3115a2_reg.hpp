@@ -81,9 +81,4 @@ static constexpr hal::byte ctrl_reg1_ost = 0x02;
 // Altimeter-Barometer mode bit
 static constexpr hal::byte ctrl_reg1_alt = 0x80;
 
-/** ---------- mpl Oversample Values ---------- **/
-static constexpr hal::byte ctrl_reg1_os32 = 0x28;
-static constexpr hal::byte ctrl_reg1_os64 = 0x30;
-static constexpr hal::byte ctrl_reg1_os128 = 0x38;
-
 }  // namespace hal::mpl

@@ -63,7 +63,7 @@ class libhal_mpl_conan(ConanFile):
 
     def requirements(self):
         self.requires("libhal/[^2.0.0]")
-        self.requires("libhal-util/[^2.0.0]")
+        self.requires("libhal-util/[^3.0.0]")
 
     def layout(self):
         cmake_layout(self)
