@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include <libhal-armcortex/dwt_counter.hpp>
-#include <libhal-armcortex/startup.hpp>
 #include <libhal-armcortex/system_control.hpp>
 
 #include <libhal-lpc40/clock.hpp>
@@ -22,13 +21,6 @@
 #include <libhal-lpc40/uart.hpp>
 
 #include "../hardware_map.hpp"
-
-hal::status initialize_processor()
-{
-  hal::cortex_m::initialize_data_section();
-
-  return hal::success();
-}
 
 hal::result<hardware_map> initialize_platform()
 {
