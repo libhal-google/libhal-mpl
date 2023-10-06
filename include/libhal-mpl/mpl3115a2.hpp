@@ -45,6 +45,19 @@ public:
     meters altitude;
   };
 
+   /** ---------- MPLXOversample Values ---------- **/
+  typedef enum mpl_os_rate
+  {
+    os1 = 0x00,   // 6ms
+    os2 = 0x08,   // 10ms
+    os4 = 0x10,   // 18ms
+    os8 = 0x18,   // 34ms
+    os16 = 0x20,  // 66ms
+    os32 = 0x28,  // 130ms
+    os64 = 0x30,  // 258ms
+    os128 = 0x38  // 512ms  
+  } mpl_os_rate;
+
   /**
    * @brief Initialization of MPLX device.
    *
@@ -55,7 +68,7 @@ public:
    *   - Set oversampling ratio to 2^128 (OS128)
    *   - Enable data ready events for pressure/altitude and temperature
    */
-  [[nodiscard]] static result<mpl3115a2> create(hal::i2c& p_i2c);
+  [[nodiscard]] static result<mpl3115a2> create(hal::i2c& p_i2c, mpl_os_rate os_rate = mpl_os_rate::os32);
 
   /**
    * @brief Read pressure data from out_t_msb_r and out_t_lsb_r

@@ -28,7 +28,8 @@ hal::status application(hardware_map& p_map)
   auto& i2c = *p_map.i2c;
 
   hal::print(console, "\n\nMPL3115A2 Demo Application Starting...\n");
-  auto mpl_device = HAL_CHECK(hal::mpl::mpl3115a2::create(i2c));
+  // Default os value is os64 (258ms)
+  auto mpl_device = HAL_CHECK(hal::mpl::mpl3115a2::create(i2c, hal::mpl::mpl3115a2::mpl_os_rate::os64));
 
   int8_t alt_offset = 0;
   mpl_device.set_altitude_offset(alt_offset);
@@ -38,7 +39,7 @@ hal::status application(hardware_map& p_map)
   mpl_device.set_sea_pressure(slp);
 
   while (true) {
-    hal::delay(clock, 500ms);
+    hal::delay(clock, 300ms);
 
     auto temperature = HAL_CHECK(mpl_device.read_temperature()).temperature;
     hal::print<42>(console, "Measured temperature = %f °C\n", temperature);
