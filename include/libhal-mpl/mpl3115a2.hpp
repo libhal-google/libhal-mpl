@@ -104,7 +104,7 @@ private:
 
   /* Variable to track current sensor mode to determine if CTRL_REG1 ALT flag
    * needs to be set. */
-  mode m_sensor_mode;
+  mode m_sensor_mode = mode::barometer;
 };
 
 }  // namespace hal::mpl

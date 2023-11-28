@@ -8,11 +8,7 @@
 
 using namespace std::literals;
 namespace hal::mpl {
-
-/***********************************************
- *  Free Functions
- ***********************************************/
-
+namespace {
 /**
  * @brief Set the ctrl_reg1_alt bit in ctrl_reg1 to the value corresponding to
  * 'mode'
@@ -46,28 +42,32 @@ hal::status set_mode(hal::i2c* p_i2c, mpl3115a2::mode p_mode)
   return hal::success();
 }
 
+struct modify_reg_param_t
+{
+  hal::byte address;
+  hal::byte bits_to_set;
+};
+
 /**
  * @brief Set bits in a register without overwriting existing register state
  * @param p_i2c The I2C peripheral used for communication with the device.
  * @param p_reg_addr: 8 bit register address
  * @param p_bits_to_set: 8 bit value specifying which bits to set in register
  */
-hal::status modify_reg_bits(hal::i2c* p_i2c,
-                            hal::byte p_reg_addr,
-                            hal::byte p_bits_to_set)
+hal::status modify_reg_bits(hal::i2c* p_i2c, modify_reg_param_t p_reg)
 {
   // Read old register value
   auto reg_buffer =
     HAL_CHECK(hal::write_then_read<1>(*p_i2c,
                                       device_address,
-                                      std::array<hal::byte, 1>{ p_reg_addr },
+                                      std::array<hal::byte, 1>{ p_reg.address },
                                       hal::never_timeout()));
 
   // Set specified bits while maintaining old values
-  hal::byte updated_reg = reg_buffer[0] | p_bits_to_set;
+  hal::byte updated_reg = reg_buffer[0] | p_reg.bits_to_set;
   HAL_CHECK(hal::write(*p_i2c,
                        device_address,
-                       std::array<hal::byte, 2>{ p_reg_addr, updated_reg },
+                       std::array<hal::byte, 2>{ p_reg.address, updated_reg },
                        hal::never_timeout()));
 
   return hal::success();
@@ -113,21 +113,26 @@ hal::status poll_reset(hal::i2c* p_i2c)
   return hal::success();
 }
 
+struct poll_flag_param_t
+{
+
+  /// 8 bit value specifying the register address
+  hal::byte address;
+  /// 8 bit value specifying which bit(s) to check
+  hal::byte flag;
+  /// The state of the bit to finish polling
+  bool desired_state;
+};
+
 /**
  * @brief Wait for a specified flag bit in a register to be set to the desired
  * state.
  * @param p_i2c The I2C peripheral used for communication with the device.
- * @param p_reg_addr: 8 bit value specifying the register address
- * @param p_flag: 8 bit value specifying which bit(s) to check
- * @param p_desired_state: The desired final of the flag. When this state is
  * reached, the function will exit.
  */
-hal::status poll_flag(hal::i2c* p_i2c,
-                      hal::byte p_reg_addr,
-                      hal::byte p_flag,
-                      bool p_desired_state)
+hal::status poll_flag(hal::i2c* p_i2c, poll_flag_param_t p_poll)
 {
-  std::array<hal::byte, 1> status_payload{ p_reg_addr };
+  std::array<hal::byte, 1> status_payload{ p_poll.address };
   std::array<hal::byte, 1> status_buffer{};
   uint16_t retries = 0;
   bool flag_set = true;
@@ -139,10 +144,10 @@ hal::status poll_flag(hal::i2c* p_i2c,
                                    status_buffer,
                                    hal::never_timeout()));
 
-    if (p_desired_state) {
-      flag_set = ((status_buffer[0] & p_flag) == 0);
+    if (p_poll.desired_state) {
+      flag_set = ((status_buffer[0] & p_poll.flag) == 0);
     } else {
-      flag_set = ((status_buffer[0] & p_flag) != 0);
+      flag_set = ((status_buffer[0] & p_poll.flag) != 0);
     }
     retries++;
   }
@@ -158,20 +163,21 @@ hal::status poll_flag(hal::i2c* p_i2c,
 hal::status initiate_one_shot(hal::i2c* p_i2c)
 {
   // Wait for one-shot flag to clear
-  poll_flag(p_i2c, ctrl_reg1, ctrl_reg1_ost, false);
+  poll_flag(
+    p_i2c,
+    { .address = ctrl_reg1, .flag = ctrl_reg1_ost, .desired_state = false });
 
   // Set ost bit in ctrl_reg1 - initiate one shot measurement
-  HAL_CHECK(modify_reg_bits(p_i2c, ctrl_reg1, ctrl_reg1_ost));
+  HAL_CHECK(modify_reg_bits(
+    p_i2c, { .address = ctrl_reg1, .bits_to_set = ctrl_reg1_ost }));
 
   return hal::success();
 }
-
-/***********************************************
- *  MPL Class Functions
- ***********************************************/
+}  // namespace
 
 mpl3115a2::mpl3115a2(hal::i2c& p_i2c)
   : m_i2c(&p_i2c)
+  , m_sensor_mode(mode::altimeter)
 {
 }
 
@@ -191,13 +197,15 @@ result<mpl3115a2> mpl3115a2::create(hal::i2c& p_i2c)
   }
 
   // software reset
-  modify_reg_bits(&p_i2c, ctrl_reg1, ctrl_reg1_rst);
+  modify_reg_bits(&p_i2c,
+                  { .address = ctrl_reg1, .bits_to_set = ctrl_reg1_rst });
 
   poll_reset(&p_i2c);
 
   // set oversampling ratio to 2^128 and set altitude mode
-  modify_reg_bits(&p_i2c, ctrl_reg1, ctrl_reg1_os128 | ctrl_reg1_alt);
-  mpl_dev.m_sensor_mode = mode::altimeter;
+  modify_reg_bits(
+    &p_i2c,
+    { .address = ctrl_reg1, .bits_to_set = ctrl_reg1_os128 | ctrl_reg1_alt });
 
   // enable data ready events for pressure/altitude and temperature
   std::array<hal::byte, 2> dr_payload{
@@ -212,15 +220,15 @@ result<mpl3115a2> mpl3115a2::create(hal::i2c& p_i2c)
 hal::status mpl3115a2::set_sea_pressure(float p_sea_level_pressure)
 {
   // divide by 2 to convert to 2Pa per LSB
-  uint16_t two_pa = (p_sea_level_pressure / 2);
-  hal::byte two_pa_hi = static_cast<hal::byte>((two_pa & 0xFF00) >> 8);
-  hal::byte two_pa_lo = static_cast<hal::byte>(two_pa & 0x00FF);
+  auto two_pa = static_cast<std::uint16_t>(p_sea_level_pressure / 2.0f);
+  auto two_pa_hi = static_cast<hal::byte>((two_pa & 0xFF00) >> 8);
+  auto two_pa_lo = static_cast<hal::byte>(two_pa & 0x00FF);
 
   // write result to register
   std::array<hal::byte, 3> slp_payload = {
     bar_in_msb_r,
-    two_pa_hi,   // msb
-    two_pa_lo  // lsb
+    two_pa_hi,  // msb
+    two_pa_lo   // lsb
   };
 
   HAL_CHECK(
@@ -244,7 +252,8 @@ hal::result<mpl3115a2::temperature_read_t> mpl3115a2::read_temperature()
 
   initiate_one_shot(m_i2c);
 
-  poll_flag(m_i2c, status_r, status_tdr, true);
+  poll_flag(m_i2c,
+            { .address = status_r, .flag = status_tdr, .desired_state = true });
 
   // Read data from out_t_msb_r and out_t_lsb_r
   auto temp_buffer =
@@ -253,7 +262,7 @@ hal::result<mpl3115a2::temperature_read_t> mpl3115a2::read_temperature()
                                       std::array<hal::byte, 1>{ out_t_msb_r },
                                       hal::never_timeout()));
 
-  int16_t temp_reading = int16_t(temp_buffer[0]) << 8 | int16_t(temp_buffer[1]);
+  auto temp_reading = (temp_buffer[0] << 8) | temp_buffer[1];
   return mpl3115a2::temperature_read_t{
     static_cast<float>(temp_reading) / temp_conversion_factor,
   };
@@ -271,7 +280,8 @@ hal::result<mpl3115a2::pressure_read_t> mpl3115a2::read_pressure()
 
   initiate_one_shot(m_i2c);
 
-  poll_flag(m_i2c, status_r, status_pdr, true);
+  poll_flag(m_i2c,
+            { .address = status_r, .flag = status_pdr, .desired_state = true });
 
   // Read data from out_p_msb_r, out_p_csb_r, and out_p_lsb_r
   auto pres_buffer =
@@ -300,7 +310,8 @@ hal::result<mpl3115a2::altitude_read_t> mpl3115a2::read_altitude()
 
   initiate_one_shot(m_i2c);
 
-  poll_flag(m_i2c, status_r, status_pdr, true);
+  poll_flag(m_i2c,
+            { .address = status_r, .flag = status_pdr, .desired_state = true });
 
   // Read data from out_p_msb_r, out_p_csb_r, and out_p_lsb_r
   auto alt_buffer =
