@@ -11,26 +11,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 cmake_minimum_required(VERSION 3.15)
 
-project(libhal-mpl VERSION 0.0.1 LANGUAGES CXX)
+project(libhal-mpl LANGUAGES CXX)
 
-find_package(libhal REQUIRED CONFIG)
-find_package(libhal-util REQUIRED CONFIG)
+libhal_test_and_make_library(
+  LIBRARY_NAME libhal-mpl
 
-add_library(libhal-mpl src/mpl3115a2.cpp)
+  SOURCES
+  src/mpl3115a2.cpp
 
-target_include_directories(libhal-mpl PUBLIC include)
-target_compile_features(libhal-mpl PRIVATE cxx_std_20)
-target_compile_options(libhal-mpl PRIVATE -Wall -Wextra)
-target_link_libraries(libhal-mpl PRIVATE
+  TEST_SOURCES
+  tests/mpl3115a2.test.cpp
+  tests/main.test.cpp
+
+  PACKAGES
+  libhal
+  libhal-util
+
+  LINK_LIBRARIES
   libhal::libhal
   libhal::util
+
+  TEST_PACKAGES
+  libhal-mock
+
+  TEST_LINK_LIBRARIES
+  libhal::mock
 )
-
-if(NOT BUILD_TESTING STREQUAL OFF)
-  add_subdirectory(tests)
-endif()
-
-install(TARGETS libhal-mpl)
