@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2024 Khalil Estell
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,47 +14,17 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-project(demos VERSION 0.0.1 LANGUAGES CXX)
+project(demos LANGUAGES CXX)
 
-set(platform_library $ENV{LIBHAL_PLATFORM_LIBRARY})
-set(platform $ENV{LIBHAL_PLATFORM})
+libhal_build_demos(
+    DEMOS
+    mpl3115a2
 
-message(WARNING "${platform_library}")
+    PACKAGES
+    libhal-mpl
+    libhal-util
 
-if("${platform_library}" STREQUAL "")
-    message(FATAL_ERROR
-        "Build environment variable LIBHAL_PLATFORM_LIBRARY is required for " "this project.")
-endif()
-
-find_package(libhal-${platform_library} REQUIRED CONFIG)
-find_package(libhal-mpl REQUIRED CONFIG)
-find_package(libhal-util REQUIRED CONFIG)
-
-set(DEMOS mpl3115a2)
-
-add_library(startup_code
-    main.cpp
-    platforms/${platform}.cpp)
-target_include_directories(startup_code PUBLIC .)
-target_compile_features(startup_code PRIVATE cxx_std_20)
-target_link_libraries(startup_code PRIVATE
-    libhal::${platform_library}
+    LINK_LIBRARIES
     libhal::mpl
-    libhal::util)
-
-foreach(demo IN LISTS DEMOS)
-    set(current_project ${demo}.elf)
-    message(STATUS "Generating Demo for \"${current_project}\"")
-    add_executable(${current_project} applications/${demo}.cpp)
-    target_include_directories(${current_project} PUBLIC .)
-    target_compile_features(${current_project} PRIVATE cxx_std_20)
-    target_link_options(${current_project} PRIVATE
-        --oslib=semihost --crt0=minimal)
-    target_link_libraries(${current_project} PRIVATE
-        libhal::${platform_library}
-        libhal::mpl
-        libhal::util
-        startup_code)
-    libhal_post_build(${current_project})
-    libhal_disassemble(${current_project})
-endforeach()
+    libhal::util
+)

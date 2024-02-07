@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC
+// Copyright 2024 Khalil Estell
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -117,7 +117,7 @@ private:
 
   /* Variable to track current sensor mode to determine if CTRL_REG1 ALT flag
    * needs to be set. */
-  mode m_sensor_mode;
+  mode m_sensor_mode = mode::barometer;
 };
 
 }  // namespace hal::mpl

@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2024 Khalil Estell
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,11 +23,11 @@ class demos(ConanFile):
     default_options = {"platform": "unspecified"}
 
     def build_requirements(self):
-        self.tool_requires("libhal-cmake-util/1.0.0")
+        self.tool_requires("libhal-cmake-util/3.0.1")
 
     def requirements(self):
         if str(self.options.platform).startswith("lpc40"):
-            self.requires("libhal-lpc40/[^2.1.1]")
+            self.requires("libhal-lpc40/[^2.1.5]")
         self.requires("libhal-mpl/0.0.1")
         self.requires("libhal-util/[^3.0.0]")
 

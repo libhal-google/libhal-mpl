@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2024 Khalil Estell
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ required_conan_version = ">=2.0.6"
 
 class libhal_mpl_conan(ConanFile):
     name = "libhal-mpl"
-    version = "0.0.1"
+    version = "0.0.2"
     license = "Apache-2.0"
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://github.com/libhal/libhal-mpl"
@@ -71,23 +71,9 @@ class libhal_mpl_conan(ConanFile):
         cmake_layout(self)
 
     def build(self):
-        run_test = not self.conf.get("tools.build:skip_test", default=False)
-
         cmake = CMake(self)
-        if self.settings.os == "Windows":
-            cmake.configure()
-        elif self._bare_metal:
-            cmake.configure(variables={
-                "BUILD_TESTING": "OFF"
-            })
-        else:
-            cmake.configure(variables={"ENABLE_ASAN": True})
-
+        cmake.configure()
         cmake.build()
-
-        if run_test and not self._bare_metal:
-            test_folder = os.path.join("tests")
-            self.run(os.path.join(test_folder, "unit_test"))
 
     def package(self):
         copy(self,
