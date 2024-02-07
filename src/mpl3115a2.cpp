@@ -181,7 +181,7 @@ mpl3115a2::mpl3115a2(hal::i2c& p_i2c)
 {
 }
 
-result<mpl3115a2> mpl3115a2::create(hal::i2c& p_i2c)
+result<mpl3115a2> mpl3115a2::create(hal::i2c& p_i2c, mpl_os_rate ctrl_reg1_os)
 {
   mpl3115a2 mpl_dev(p_i2c);
 
@@ -202,10 +202,9 @@ result<mpl3115a2> mpl3115a2::create(hal::i2c& p_i2c)
 
   poll_reset(&p_i2c);
 
-  // set oversampling ratio to 2^128 and set altitude mode
-  modify_reg_bits(
-    &p_i2c,
-    { .address = ctrl_reg1, .bits_to_set = ctrl_reg1_os128 | ctrl_reg1_alt });
+  // set oversampling ratio and set altitude mode
+  modify_reg_bits(&p_i2c, ctrl_reg1, ctrl_reg1_os | ctrl_reg1_alt);
+  mpl_dev.m_sensor_mode = mode::altimeter;
 
   // enable data ready events for pressure/altitude and temperature
   std::array<hal::byte, 2> dr_payload{
